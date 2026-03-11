@@ -14,10 +14,10 @@
     "seed:test": "wrangler dev seed-test-data.js --local --port 8788"
   },
   "dependencies": {
-    "hono": "^3.12.0",
-    "@tsndr/cloudflare-worker-jwt": "^2.4.0"
+    "@tsndr/cloudflare-worker-jwt": "^2.4.0",
+    "hono": "^3.12.0"
   },
   "devDependencies": {
-    "wrangler": "^3.22.0"
+    "wrangler": "^4.72.0"
   }
 }
