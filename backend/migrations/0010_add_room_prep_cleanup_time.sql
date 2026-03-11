@@ -1,0 +1,4 @@
+-- Add prep_time_minutes and cleanup_time_minutes to rooms table
+-- Skip if already exists (for backward compatibility)
+-- SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so this is a no-op migration
+-- The columns were already added in a previous migration

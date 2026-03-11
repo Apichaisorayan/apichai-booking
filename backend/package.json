@@ -1,0 +1,23 @@
+{
+  "name": "beauty-clinic-backend",
+  "version": "1.0.0",
+  "description": "Beauty Clinic API with Cloudflare D1, Workers, and Hono",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --ip 0.0.0.0",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply beauty-clinic-db",
+    "db:migrate:prod": "wrangler d1 migrations apply beauty-clinic-db --remote",
+    "db:create": "wrangler d1 create beauty-clinic-db",
+    "seed:admin": "wrangler dev seed-admin.js --local",
+    "seed:admin:prod": "wrangler deploy seed-admin.js --name seed-admin-temp && curl https://seed-admin-temp.apichais-leo01.workers.dev",
+    "seed:test": "wrangler dev seed-test-data.js --local --port 8788"
+  },
+  "dependencies": {
+    "hono": "^3.12.0",
+    "@tsndr/cloudflare-worker-jwt": "^2.4.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.22.0"
+  }
+}

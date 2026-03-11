@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>Appointment Management - Apichai</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#002a3a" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/assets/logo.svg" />
+
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00bfa5",
+                        "primary-dark": "#008f7a",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937",
+                        "sidebar-dark": "#002a3a",
+                    },
+                    fontFamily: {
+                        display: ["Sarabun", "sans-serif"],
+                        body: ["Sarabun", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            min-height: max(884px, 100dvh);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 antialiased pb-24">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-sidebar-dark text-white shadow-sm flex flex-col">
+        <div class="h-14 flex items-center justify-between px-4 w-full">
+            <div class="flex items-center gap-3">
+                <img src="../assets/logo.svg" alt="Apichai"
+                    class="w-10 h-10 rounded-xl object-cover ring-2 ring-white/40" />
+                <div class="flex flex-col">
+                    <span class="font-bold text-base leading-none tracking-wide">สร้างนัดหมาย</span>
+                    <span class="text-[10px] text-primary/80 uppercase tracking-wider font-semibold">Apichai</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='booking-calendar.html'"
+                    class="p-1.5 rounded-full active:bg-white/10 transition hover:bg-white/10" title="ดูปฏิทิน">
+                    <span class="material-symbols-outlined text-[24px]">calendar_month</span>
+                </button>
+                <button onclick="toggleProfileMenu()" id="profileBtn"
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-white/10 hover:ring-4 hover:ring-white/20 transition">
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="pt-[70px] px-4 max-w-lg mx-auto w-full pb-safe">
+        <div class="space-y-6">
+            <div>
+                <h1 class="text-lg font-bold text-gray-900 dark:text-white">ข้อมูลการจอง</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">กรอกข้อมูลเพื่อสร้างนัดหมายใหม่</p>
+            </div>
+            <div class="space-y-5">
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">person</span>
+                        ผู้จอง
+                    </label>
+                    <div id="bookerCard"
+                        class="p-3 bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-3 shadow-sm">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">person_outline</span>
+                        เลือกหมอ
+                    </label>
+                    <div class="relative">
+                        <select
+                            class="w-full appearance-none bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary shadow-sm pr-10">
+                            <option disabled="" selected="" value="">เลือกหมอ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">medical_services</span>
+                        เลือกเครื่องมือ
+                    </label>
+                    <div class="relative">
+                        <select
+                            class="w-full appearance-none bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary shadow-sm pr-10">
+                            <option disabled="" selected="" value="">เลือกเครื่องมือ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">account_circle</span>
+                        ชื่อผู้ป่วย
+                    </label>
+                    <input
+                        class="w-full bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary shadow-sm"
+                        placeholder="กรอกชื่อผู้ป่วย" type="text" />
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                        วันที่
+                    </label>
+                    <div class="relative">
+                        <input id="dateInput"
+                            class="w-full bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm"
+                            type="date" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span class="material-symbols-outlined text-[18px]">schedule</span>
+                            เวลาเริ่ม
+                        </label>
+                        <div class="relative">
+                            <input id="startTimeInput"
+                                class="w-full bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm text-center"
+                                type="time" value="09:00" min="09:00" max="20:00" />
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span class="material-symbols-outlined text-[18px]">schedule</span>
+                            เวลาสิ้นสุด
+                        </label>
+                        <div class="relative">
+                            <input id="endTimeInput"
+                                class="w-full bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm text-center"
+                                type="time" value="10:00" min="09:00" max="21:00" />
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">description</span>
+                        รายละเอียดเพิ่มเติม
+                    </label>
+                    <textarea
+                        class="w-full bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary shadow-sm resize-none"
+                        placeholder="ระบุรายละเอียดเพิ่มเติม..." rows="3"></textarea>
+                </div>
+                <div class="space-y-2 pb-6">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="material-symbols-outlined text-[18px]">meeting_room</span>
+                        เลือกห้อง
+                    </label>
+                    <div class="relative">
+                        <select
+                            class="w-full appearance-none bg-gray-50 dark:bg-card-dark border-0 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary shadow-sm pr-10">
+                            <option disabled="" selected="" value="">เลือกห้อง</option>
+                        </select>
+                    </div>
+                </div>
+                <button
+                    class="w-full py-3.5 bg-sidebar-dark text-white rounded-xl font-bold shadow-soft hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    บันทึกการจอง
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 py-2 px-4 flex justify-between items-center z-40 text-[10px] pb-safe">
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="users.html">
+            <span class="material-symbols-outlined text-2xl">group</span>
+            <span class="font-medium">รายชื่อ</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-primary" href="booking-calendar.html">
+            <span class="material-symbols-outlined text-2xl">calendar_month</span>
+            <span class="font-medium">นัดหมาย</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition relative -mt-6"
+            href="dashboard.html">
+            <div
+                class="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-lg flex items-center justify-center mb-1 ring-4 ring-white dark:ring-gray-800">
+                <span class="material-symbols-outlined text-white text-2xl">dashboard</span>
+            </div>
+            <span class="font-medium text-gray-400 dark:text-gray-500">ภาพรวม</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="rooms.html">
+            <span class="material-symbols-outlined text-2xl">meeting_room</span>
+            <span class="font-medium">ห้อง</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="machines.html">
+            <span class="material-symbols-outlined text-2xl">medical_services</span>
+            <span class="font-medium">เครื่องมือ</span>
+        </a>
+    </nav>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8787'
+            : window.location.hostname.match(/^192\.168\.\d+\.\d+$/) || window.location.hostname.match(/^10\.\d+\.\d+\.\d+$/)
+            ? `http://${window.location.hostname}:8787`
+            : window.location.hostname.includes('qa.')
+                ? 'https://beauty-clinic-api-qa.apichais-leo01.workers.dev'
+                : 'https://beauty-clinic-api.apichais-leo01.workers.dev';
+
+        // ============================================================================
+        // STATE MANAGEMENT
+        // ============================================================================
+
+        let doctors = [];
+        let machines = [];
+        let rooms = [];
+        let selectedMachine = null;
+        let selectedRoom = null;
+        let editingBookingId = null; // Store booking ID if editing
+
+        // ============================================================================
+        // AUTHENTICATION
+        // ============================================================================
+
+        function checkAuth() {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return null;
+            }
+            return token;
+        }
+
+        // ============================================================================
+        // API HELPERS
+        // ============================================================================
+
+        async function apiCall(endpoint, options = {}) {
+            const token = checkAuth();
+            if (!token) return null;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+
+            try {
+                console.log('API Request:', endpoint, options.body ? JSON.parse(options.body) : '');
+
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+
+                const responseData = await response.json();
+                console.log('API Response:', response.status, responseData);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        window.location.href = '/';
+                        return null;
+                    }
+                    throw new Error(responseData.error || responseData.message || `HTTP ${response.status}`);
+                }
+
+                return responseData;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        async function deleteGoogleCalendarEvent(token, eventId) {
+            const response = await fetch(`${API_URL}/api/calendar/events/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Origin': window.location.origin,
+                },
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(error.error || `HTTP ${response.status}`);
+            }
+
+            return response.json();
+        }
+
+        // ============================================================================
+        // UI HELPERS - DIALOGS
+        // ============================================================================
+
+        function showLoading() {
+            const profileMenu = document.getElementById('profileMenu');
+            if (profileMenu) {
+                profileMenu.classList.add('hidden');
+            }
+            document.getElementById('loadingDialog').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingDialog').classList.add('hidden');
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const dialog = document.getElementById('notificationDialog');
+            const icon = document.getElementById('notificationIcon');
+            const iconSpan = icon.querySelector('.material-symbols-outlined');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            const okBtn = document.getElementById('notificationOkBtn');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset classes
+            icon.className = 'flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full';
+            okBtn.className = 'w-full px-4 py-2.5 rounded-xl font-medium hover:opacity-90 transition';
+
+            if (type === 'error') {
+                icon.classList.add('bg-red-100', 'dark:bg-red-900/20');
+                iconSpan.className = 'material-symbols-outlined text-red-600 dark:text-red-400 text-2xl';
+                iconSpan.textContent = 'error';
+                okBtn.classList.add('bg-red-600', 'text-white');
+            } else if (type === 'success') {
+                icon.classList.add('bg-green-100', 'dark:bg-green-900/20');
+                iconSpan.className = 'material-symbols-outlined text-green-600 dark:text-green-400 text-2xl';
+                iconSpan.textContent = 'check_circle';
+                okBtn.classList.add('bg-green-600', 'text-white');
+            } else {
+                icon.classList.add('bg-blue-100', 'dark:bg-blue-900/20');
+                iconSpan.className = 'material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl';
+                iconSpan.textContent = 'info';
+                okBtn.classList.add('bg-primary', 'text-white');
+            }
+
+            dialog.classList.remove('hidden');
+
+            const handleOk = () => {
+                dialog.classList.add('hidden');
+                okBtn.removeEventListener('click', handleOk);
+            };
+
+            okBtn.addEventListener('click', handleOk);
+        }
+
+        function showConfirmDialog(title, message) {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('confirmDialog');
+                const titleEl = document.getElementById('confirmTitle');
+                const messageEl = document.getElementById('confirmMessage');
+                const okBtn = document.getElementById('confirmOkBtn');
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                dialog.classList.remove('hidden');
+
+                const handleOk = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
+            });
+        }
+
+        // ============================================================================
+        // UI HELPERS - PROFILE MENU
+        // ============================================================================
+
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        async function handleLogout() {
+            document.getElementById('profileMenu').classList.add('hidden');
+            const confirmed = await showConfirmDialog(
+                'ออกจากระบบ',
+                'คุณต้องการออกจากระบบใช่หรือไม่?'
+            );
+
+            if (confirmed) {
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('google_calendar_token');
+                sessionStorage.removeItem('google_calendar_refresh_token');
+                window.location.href = '/';
+            }
+        }
+
+        // Close profile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const profileBtn = document.getElementById('profileBtn');
+            if (!menu.contains(e.target) && !profileBtn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // ============================================================================
+        // DATA LOADING
+        // ============================================================================
+
+        // Check for booking conflicts (overlapping time slots)
+        async function checkBookingConflicts(date, startTime, endTime, roomId, machineId, doctorId, excludeBookingId = null) {
+            try {
+                // Get all bookings for the selected date
+                const bookingsData = await apiCall(`/api/bookings/date/${date}`);
+                const bookings = bookingsData?.filter(b => b.status === 'CONFIRMED') || [];
+
+                const conflicts = {
+                    doctor: [],
+                    room: [],
+                    machine: []
+                };
+
+                const [newStartHour, newStartMin] = startTime.split(':').map(Number);
+                const [newEndHour, newEndMin] = endTime.split(':').map(Number);
+                const newStartMinutes = newStartHour * 60 + newStartMin;
+                const newEndMinutes = newEndHour * 60 + newEndMin;
+
+                for (const booking of bookings) {
+                    // Skip if this is the booking being edited
+                    if (excludeBookingId && booking.id === excludeBookingId) {
+                        continue;
+                    }
+
+                    // Check time overlap first
+                    const [bookingStartHour, bookingStartMin] = booking.start_time.split(':').map(Number);
+                    const [bookingEndHour, bookingEndMin] = booking.end_time.split(':').map(Number);
+                    const bookingStartMinutes = bookingStartHour * 60 + bookingStartMin;
+                    const bookingEndMinutes = bookingEndHour * 60 + bookingEndMin;
+
+                    // Check if times overlap
+                    const hasOverlap = (newStartMinutes < bookingEndMinutes && newEndMinutes > bookingStartMinutes);
+
+                    if (!hasOverlap) {
+                        continue; // No time overlap, skip
+                    }
+
+                    // Check conflicts
+                    const sameDoctor = booking.doctor_id === doctorId;
+                    const sameRoom = booking.room_id === roomId;
+                    const sameMachine = booking.machine_id === machineId;
+
+                    if (sameDoctor) {
+                        conflicts.doctor.push({
+                            booking: booking,
+                            time: `${booking.start_time.substring(0, 5)} - ${booking.end_time.substring(0, 5)}`
+                        });
+                    }
+
+                    if (sameRoom) {
+                        conflicts.room.push({
+                            booking: booking,
+                            time: `${booking.start_time.substring(0, 5)} - ${booking.end_time.substring(0, 5)}`
+                        });
+                    }
+
+                    if (sameMachine) {
+                        conflicts.machine.push({
+                            booking: booking,
+                            time: `${booking.start_time.substring(0, 5)} - ${booking.end_time.substring(0, 5)}`
+                        });
+                    }
+                }
+
+                return conflicts;
+            } catch (error) {
+                console.error('Error checking conflicts:', error);
+                return { doctor: [], room: [], machine: [] };
+            }
+        }
+
+        // Show doctor conflict error (blocking)
+        function showDoctorConflictError(conflicts) {
+            const timeList = conflicts.map(c => c.time).join(', ');
+
+            showNotification(
+                '❌ หมอไม่ว่าง',
+                `หมอกำลังดำเนินการในช่วงเวลา ${timeList}\n\nกรุณาเลือกเวลาถัดไป`,
+                'error'
+            );
+        }
+
+        // Show room/machine conflict warning (can proceed)
+        async function showResourceConflictWarning(roomConflicts, machineConflicts) {
+            let message = '';
+
+            if (roomConflicts.length > 0) {
+                const timeList = roomConflicts.map(c => c.time).join(', ');
+                message += `มีการจองห้องนี้แล้วในเวลา ${timeList}`;
+            }
+
+            if (machineConflicts.length > 0) {
+                if (message) message += '\n\n';
+                const timeList = machineConflicts.map(c => c.time).join(', ');
+                message += `มีการจองเครื่องมือนี้แล้วในเวลา ${timeList}`;
+            }
+
+            message += '\n\nต้องการบันทึกต่อหรือไม่?';
+
+            return await showConfirmDialog('⚠️ พบการจองซ้ำ', message);
+        }
+
+        async function loadUserInfo() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+                if (user.name) {
+                    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+                    // Update profile button
+                    const profileBtn = document.getElementById('profileBtn');
+                    if (profileBtn) {
+                        profileBtn.textContent = initials;
+                    }
+
+                    // Update booker card in form
+                    const bookerCard = document.getElementById('bookerCard');
+                    if (bookerCard) {
+                        bookerCard.innerHTML = `
+                            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">
+                                ${initials}
+                            </div>
+                            <div>
+                                <div class="font-semibold text-sm text-gray-900 dark:text-white">${user.name}</div>
+                                <span class="inline-block px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[10px] font-medium border border-gray-200 dark:border-gray-700">${user.role || 'USER'}</span>
+                            </div>
+                        `;
+                    }
+
+                    // Update profile menu if exists
+                    const profileName = document.getElementById('profileName');
+                    const profileEmail = document.getElementById('profileEmail');
+                    if (profileName) profileName.textContent = user.name || 'User';
+                    if (profileEmail) profileEmail.textContent = user.email || '';
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        // Load booking data for editing
+        async function loadBookingForEdit() {
+            try {
+                const booking = await apiCall(`/api/bookings/${editingBookingId}`);
+                
+                if (!booking) {
+                    showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลการจองได้', 'error');
+                    return;
+                }
+
+                // Populate form fields with booking data
+                const doctorSelect = document.querySelectorAll('select')[0];
+                const machineSelect = document.querySelectorAll('select')[1];
+                const roomSelect = document.querySelectorAll('select')[2];
+                const patientInput = document.querySelector('input[placeholder="กรอกชื่อผู้ป่วย"]');
+                const dateInput = document.getElementById('dateInput');
+                const startTimeInput = document.getElementById('startTimeInput');
+                const endTimeInput = document.getElementById('endTimeInput');
+                const notesTextarea = document.querySelector('textarea');
+
+                // Set values with a small delay to ensure dropdowns are populated
+                setTimeout(() => {
+                    if (booking.doctor_id) {
+                        doctorSelect.value = booking.doctor_id;
+                        selectedDoctor = doctors.find(d => d.id === booking.doctor_id);
+                    }
+                    if (booking.machine_id) {
+                        machineSelect.value = booking.machine_id;
+                        selectedMachine = machines.find(m => m.id === booking.machine_id);
+                        updateRoomOptions(); // Update available rooms based on machine
+                    }
+                    if (booking.room_id) {
+                        setTimeout(() => {
+                            roomSelect.value = booking.room_id;
+                            selectedRoom = rooms.find(r => r.id === booking.room_id);
+                        }, 100);
+                    }
+                    
+                    if (patientInput && booking.patient_name) {
+                        patientInput.value = booking.patient_name;
+                    }
+                    if (dateInput && booking.date) {
+                        dateInput.value = booking.date.split('T')[0];
+                    }
+                    if (startTimeInput && booking.start_time) {
+                        startTimeInput.value = booking.start_time.substring(0, 5);
+                    }
+                    if (endTimeInput && booking.end_time) {
+                        endTimeInput.value = booking.end_time.substring(0, 5);
+                    }
+                    if (notesTextarea && booking.notes) {
+                        notesTextarea.value = booking.notes;
+                    }
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error loading booking:', error);
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลการจองได้', 'error');
+            }
+        }
+
+        // Load doctors
+        async function loadDoctors() {
+            try {
+                const users = await apiCall('/api/users');
+                doctors = users?.filter(u => u.role === 'DOCTOR') || [];
+
+                const doctorSelect = document.querySelectorAll('select')[0];
+                if (doctorSelect) {
+                    doctorSelect.innerHTML = '<option value="" disabled selected>เลือกหมอ</option>' +
+                        doctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+                    doctorSelect.addEventListener('change', (e) => {
+                        selectedDoctor = doctors.find(d => d.id === e.target.value);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading doctors:', error);
+            }
+        }
+
+        // Load machines
+        async function loadMachines() {
+            try {
+                machines = await apiCall('/api/machines?category=MEDICAL');
+
+                const machineSelect = document.querySelectorAll('select')[1];
+                if (machineSelect) {
+                    machineSelect.innerHTML = '<option value="" disabled selected>เลือกเครื่องมือ</option>' +
+                        machines.map(m => `<option value="${m.id}">${m.name} (${m.type === 'FIXED' ? 'ติดห้อง' : 'ย้ายได้'})</option>`).join('');
+
+                    machineSelect.addEventListener('change', (e) => {
+                        selectedMachine = machines.find(m => m.id === e.target.value);
+                        updateRoomOptions();
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading machines:', error);
+            }
+        }
+
+        // Load rooms
+        async function loadRooms() {
+            try {
+                rooms = await apiCall('/api/rooms?type=PROCEDURE');
+                updateRoomOptions();
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        // Update room options based on selected machine
+        function updateRoomOptions() {
+            const roomSelect = document.querySelectorAll('select')[2];
+            if (!roomSelect || !rooms) return;
+
+            if (!selectedMachine) {
+                roomSelect.innerHTML = '<option value="" disabled selected>เลือกห้อง</option>' +
+                    rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+            } else if (selectedMachine.type === 'FIXED') {
+                // For FIXED machines, only show the room it's fixed to
+                const fixedRoom = rooms.find(r => r.id === selectedMachine.room_id);
+                if (fixedRoom) {
+                    roomSelect.innerHTML = `<option value="${fixedRoom.id}" selected>${fixedRoom.name} (ห้องของเครื่อง)</option>`;
+                    selectedRoom = fixedRoom;
+                } else {
+                    roomSelect.innerHTML = '<option value="" disabled selected>ไม่พบห้องสำหรับเครื่องนี้</option>';
+                    selectedRoom = null;
+                }
+            } else {
+                // For MOVABLE machines, show all rooms
+                roomSelect.innerHTML = '<option value="" disabled selected>เลือกห้อง</option>' +
+                    rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                selectedRoom = null;
+            }
+
+            roomSelect.addEventListener('change', (e) => {
+                selectedRoom = rooms.find(r => r.id === e.target.value);
+            });
+        }
+
+        // Show notification
+        function showNotification(title, message, type = 'info') {
+            const dialog = document.getElementById('notificationDialog');
+            const icon = document.getElementById('notificationIcon');
+            const iconSpan = icon.querySelector('.material-symbols-outlined');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            const okBtn = document.getElementById('notificationOkBtn');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset classes
+            icon.className = 'flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full';
+            okBtn.className = 'w-full px-4 py-2.5 rounded-xl font-medium hover:opacity-90 transition';
+
+            if (type === 'error') {
+                icon.classList.add('bg-red-100', 'dark:bg-red-900/20');
+                iconSpan.className = 'material-symbols-outlined text-red-600 dark:text-red-400 text-2xl';
+                iconSpan.textContent = 'error';
+                okBtn.classList.add('bg-red-600', 'text-white');
+            } else if (type === 'success') {
+                icon.classList.add('bg-green-100', 'dark:bg-green-900/20');
+                iconSpan.className = 'material-symbols-outlined text-green-600 dark:text-green-400 text-2xl';
+                iconSpan.textContent = 'check_circle';
+                okBtn.classList.add('bg-green-600', 'text-white');
+            } else {
+                icon.classList.add('bg-blue-100', 'dark:bg-blue-900/20');
+                iconSpan.className = 'material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl';
+                iconSpan.textContent = 'info';
+                okBtn.classList.add('bg-primary', 'text-white');
+            }
+
+            dialog.classList.remove('hidden');
+
+            const handleOk = () => {
+                dialog.classList.add('hidden');
+                okBtn.removeEventListener('click', handleOk);
+            };
+
+            okBtn.addEventListener('click', handleOk);
+        }
+
+        // Handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const doctorSelect = document.querySelectorAll('select')[0];
+            const machineSelect = document.querySelectorAll('select')[1];
+            const roomSelect = document.querySelectorAll('select')[2];
+            const patientInput = document.querySelector('input[placeholder="กรอกชื่อผู้ป่วย"]');
+            const dateInput = document.getElementById('dateInput');
+            const startTimeInput = document.getElementById('startTimeInput');
+            const endTimeInput = document.getElementById('endTimeInput');
+            const notesTextarea = document.querySelector('textarea');
+
+            const formData = {
+                doctor_id: doctorSelect.value,
+                machine_id: machineSelect.value,
+                room_id: roomSelect.value,
+                patient_name: patientInput.value,
+                date: dateInput.value,
+                start_time: startTimeInput.value + ':00',
+                end_time: endTimeInput.value + ':00',
+                notes: notesTextarea.value,
+                booking_type: 'PROCEDURE'
+            };
+
+            // Validate time range
+            if (startTimeInput.value && endTimeInput.value) {
+                const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+                const [endHours, endMinutes] = endTimeInput.value.split(':').map(Number);
+
+                const startTotalMinutes = startHours * 60 + startMinutes;
+                const endTotalMinutes = endHours * 60 + endMinutes;
+
+                if (endTotalMinutes <= startTotalMinutes) {
+                    showNotification('เวลาไม่ถูกต้อง', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
+                    return;
+                }
+            }
+
+            // Validate date is not in the past
+            if (dateInput.value) {
+                const selectedDate = new Date(dateInput.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                selectedDate.setHours(0, 0, 0, 0);
+
+                if (selectedDate < today) {
+                    showNotification('วันที่ไม่ถูกต้อง', 'ไม่สามารถจองย้อนหลังได้', 'error');
+                    return;
+                }
+            }
+
+            // Validate patient name is not empty or just spaces
+            if (!patientInput.value || patientInput.value.trim() === '') {
+                showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อผู้ป่วย', 'error');
+                return;
+            }
+
+            // Validate patient name length
+            if (patientInput.value.trim().length < 2) {
+                showNotification('ชื่อไม่ถูกต้อง', 'ชื่อผู้ป่วยต้องมีอย่างน้อย 2 ตัวอักษร', 'error');
+                return;
+            }
+
+            if (!formData.doctor_id || !formData.machine_id || !formData.room_id || !formData.patient_name) {
+                showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            // Validate date is selected
+            if (!dateInput.value) {
+                showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกวันที่', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+
+                // Check for booking conflicts
+                const conflicts = await checkBookingConflicts(
+                    formData.date,
+                    startTimeInput.value,
+                    endTimeInput.value,
+                    formData.room_id,
+                    formData.machine_id,
+                    formData.doctor_id
+                );
+
+                // Check doctor conflict first (blocking - cannot proceed)
+                if (conflicts.doctor.length > 0) {
+                    hideLoading();
+                    showDoctorConflictError(conflicts.doctor);
+                    return; // Stop here, cannot proceed
+                }
+
+                // Check room/machine conflicts (warning - can proceed)
+                if (conflicts.room.length > 0 || conflicts.machine.length > 0) {
+                    hideLoading();
+                    const confirmed = await showResourceConflictWarning(conflicts.room, conflicts.machine);
+                    if (!confirmed) {
+                        return; // User cancelled
+                    }
+                    showLoading();
+                }
+
+                // Validate IDs exist
+                if (!doctorSelect.value || !machineSelect.value || !roomSelect.value) {
+                    hideLoading();
+                    showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกหมอ เครื่องมือ และห้องให้ครบถ้วน', 'error');
+                    return;
+                }
+
+                // Check if selected IDs are valid
+                const selectedDoctorExists = doctors.find(d => d.id === doctorSelect.value);
+                const selectedMachineExists = machines.find(m => m.id === machineSelect.value);
+                const selectedRoomExists = rooms.find(r => r.id === roomSelect.value);
+
+                if (!selectedDoctorExists) {
+                    hideLoading();
+                    showNotification('ข้อมูลไม่ถูกต้อง', 'ไม่พบหมอที่เลือก กรุณาเลือกใหม่', 'error');
+                    return;
+                }
+
+                if (!selectedMachineExists) {
+                    hideLoading();
+                    showNotification('ข้อมูลไม่ถูกต้อง', 'ไม่พบเครื่องมือที่เลือก กรุณาเลือกใหม่', 'error');
+                    return;
+                }
+
+                if (!selectedRoomExists) {
+                    hideLoading();
+                    showNotification('ข้อมูลไม่ถูกต้อง', 'ไม่พบห้องที่เลือก กรุณาเลือกใหม่', 'error');
+                    return;
+                }
+
+                console.log('Submitting booking:', formData);
+
+                const endpoint = editingBookingId ? `/api/bookings/${editingBookingId}` : '/api/bookings';
+                const method = editingBookingId ? 'PUT' : 'POST';
+                
+                const result = await apiCall(endpoint, {
+                    method: method,
+                    body: JSON.stringify(formData)
+                });
+
+                console.log('Booking result:', result);
+
+                if (result && result.success) {
+                    hideLoading();
+                    const successMsg = editingBookingId ? 'แก้ไขการจองเรียบร้อยแล้ว' : 'บันทึกการจองเรียบร้อยแล้ว';
+                    showNotification('บันทึกสำเร็จ!', successMsg, 'success');
+                    
+                    // Clear session storage
+                    sessionStorage.removeItem('editingBookingId');
+                    
+                    // Redirect back to calendar after success
+                    setTimeout(() => {
+                        window.location.href = 'booking-calendar.html';
+                    }, 1500);
+                } else {
+                    hideLoading();
+                    showNotification('เกิดข้อผิดพลาด', result.message || 'ไม่สามารถบันทึกการจองได้', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error saving booking:', error);
+                showNotification('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกการจองได้', 'error');
+            }
+        }
+
+        // Initialize
+        async function init() {
+            checkAuth();
+            await loadUserInfo();
+            
+            // Check if we're editing a booking
+            const params = new URLSearchParams(window.location.search);
+            editingBookingId = params.get('edit') || sessionStorage.getItem('editingBookingId');
+            
+            // Update header if editing
+            if (editingBookingId) {
+                const headerTitle = document.querySelector('span[class*="font-bold"]');
+                if (headerTitle && headerTitle.textContent === 'สร้างนัดหมาย') {
+                    headerTitle.textContent = 'แก้ไขนัดหมาย';
+                }
+            }
+            
+            await Promise.all([
+                loadDoctors(),
+                loadMachines(),
+                loadRooms()
+            ]);
+
+            // If editing, load the booking data
+            if (editingBookingId) {
+                await loadBookingForEdit();
+            }
+
+            // Set default date to today (if not editing)
+            const dateInput = document.getElementById('dateInput');
+            if (dateInput && !editingBookingId) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+                dateInput.min = new Date().toISOString().split('T')[0];
+            }
+
+            // Add change listeners for time inputs
+            const startTimeInput = document.getElementById('startTimeInput');
+            const endTimeInput = document.getElementById('endTimeInput');
+
+            // Function to validate time range
+            function validateTimeRange() {
+                const start = startTimeInput.value;
+                const end = endTimeInput.value;
+
+                if (start && end) {
+                    const [startHours, startMinutes] = start.split(':').map(Number);
+                    const [endHours, endMinutes] = end.split(':').map(Number);
+
+                    const startTotalMinutes = startHours * 60 + startMinutes;
+                    const endTotalMinutes = endHours * 60 + endMinutes;
+
+                    if (endTotalMinutes <= startTotalMinutes) {
+                        endTimeInput.setCustomValidity('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น');
+                        endTimeInput.reportValidity();
+                        return false;
+                    } else {
+                        endTimeInput.setCustomValidity('');
+                        return true;
+                    }
+                }
+                return true;
+            }
+
+            if (startTimeInput) {
+                startTimeInput.addEventListener('change', () => {
+                    // Auto-update end time to be 1 hour after start time
+                    const start = startTimeInput.value;
+                    if (start && !endTimeInput.value) {
+                        const [hours, minutes] = start.split(':');
+                        const endHour = (parseInt(hours) + 1).toString().padStart(2, '0');
+                        endTimeInput.value = `${endHour}:${minutes}`;
+                    }
+                    validateTimeRange();
+                });
+            }
+
+            if (endTimeInput) {
+                endTimeInput.addEventListener('change', validateTimeRange);
+            }
+
+            // Attach submit handler
+            const submitBtn = document.querySelector('button[class*="bg-sidebar-dark"]');
+            if (submitBtn) {
+                // Remove any existing listeners by cloning the button
+                const newSubmitBtn = submitBtn.cloneNode(true);
+                submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+                newSubmitBtn.addEventListener('click', handleSubmit);
+            }
+
+            // Back button
+            const backBtn = document.querySelector('button span.material-symbols-outlined');
+            if (backBtn && backBtn.textContent === 'arrow_back') {
+                backBtn.parentElement.addEventListener('click', () => {
+                    window.location.href = 'dashboard.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- Profile Menu -->
+    <div id="profileMenu" class="hidden fixed top-16 right-4 z-[60] w-64">
+        <div
+            class="bg-white dark:bg-card-dark rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div
+                class="p-4 bg-gradient-to-br from-primary/10 to-primary-dark/10 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                        AD
+                    </div>
+                    <div class="flex-1">
+                        <p id="profileName" class="font-semibold text-gray-900 dark:text-white text-sm">User</p>
+                        <p id="profileEmail" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="py-2">
+                <button onclick="handleLogout()"
+                    class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">logout</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">ออกจากระบบ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Dialog -->
+    <div id="loadingDialog" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl p-6 flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">กำลังดำเนินการ...</p>
+        </div>
+    </div>
+
+    <!-- Custom Notification Dialog -->
+    <div id="notificationDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div id="notificationIcon"
+                    class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl">info</span>
+                </div>
+                <h3 id="notificationTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2">
+                </h3>
+                <p id="notificationMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <button id="notificationOkBtn"
+                    class="w-full px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div id="confirmDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div
+                    class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                    <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-2xl">warning</span>
+                </div>
+                <h3 id="confirmTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2"></h3>
+                <p id="confirmMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <div class="flex gap-3">
+                    <button id="confirmCancelBtn"
+                        class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        ยกเลิก
+                    </button>
+                    <button id="confirmOkBtn"
+                        class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition">
+                        ยืนยัน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+</body>
+
+</html>

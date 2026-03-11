@@ -1,0 +1,22 @@
+name = "beauty-clinic-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "beauty-clinic-db"
+database_id = "3f8c9452-7d27-45a7-891b-e974d6a00d60"
+
+# Environment Variables
+[vars]
+FRONTEND_URL = "https://deploy.beauty-clinic-app.pages.dev,https://main.beauty-clinic-app.pages.dev,https://9f1c3ab4.beauty-clinic-app.pages.dev,http://localhost:5173,http://192.168.3.151:5173"
+
+# Note: Set these secrets via CLI for production:
+# wrangler secret put JWT_SECRET
+# wrangler secret put IMGBB_API_KEY
+# wrangler secret put GOOGLE_CLIENT_ID
+# wrangler secret put GOOGLE_CLIENT_SECRET
+# wrangler secret put GOOGLE_REDIRECT_URI
+# wrangler secret put GOOGLE_CALENDAR_ID

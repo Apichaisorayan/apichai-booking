@@ -1,0 +1,23 @@
+name = "beauty-clinic-api-qa"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "aa290d0b09354dfc27f2784c873c6f68"
+
+# D1 Database (QA)
+[[d1_databases]]
+binding = "DB"
+database_name = "beauty-clinic-db-qa"
+database_id = "5a5935f5-29d7-499a-92ae-a44c0fb3483a"
+
+# Environment Variables (QA)
+[vars]
+FRONTEND_URL = "https://qa.beauty-clinic-app.pages.dev,http://localhost:5173"
+
+# Note: Set these secrets via CLI for QA:
+# wrangler secret put JWT_SECRET --config wrangler.qa.toml
+# wrangler secret put IMGBB_API_KEY --config wrangler.qa.toml
+# wrangler secret put GOOGLE_CLIENT_ID --config wrangler.qa.toml
+# wrangler secret put GOOGLE_CLIENT_SECRET --config wrangler.qa.toml
+# wrangler secret put GOOGLE_REDIRECT_URI --config wrangler.qa.toml
+# wrangler secret put GOOGLE_CALENDAR_ID --config wrangler.qa.toml

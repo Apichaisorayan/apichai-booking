@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>จัดการเครื่องมือ - Apichai</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#002a3a" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/assets/logo.svg" />
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00bfa5",
+                        "primary-dark": "#008f7a",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937",
+                        "sidebar-dark": "#002a3a",
+                    },
+                    fontFamily: {
+                        display: ["Sarabun", "sans-serif"],
+                        body: ["Sarabun", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 antialiased pb-24">
+    <!-- Header -->
+    <header
+        class="fixed top-0 left-0 right-0 z-50 bg-sidebar-dark text-white h-14 flex items-center justify-between px-4 shadow-sm">
+        <div class="flex items-center gap-3">
+            <img id="backBtn" src="../assets/logo.svg" alt="Apichai"
+                class="w-10 h-10 rounded-xl object-cover ring-2 ring-white/40 cursor-pointer" />
+            <div class="flex flex-col">
+                <span class="font-bold text-base leading-none tracking-wide">จัดการเครื่องมือ</span>
+                <span class="text-[10px] text-primary/80 uppercase tracking-wider font-semibold">Apichai</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleProfileMenu()" id="profileBtn"
+                class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-white/10 hover:ring-4 hover:ring-white/20 transition">
+                AD
+            </button>
+        </div>
+    </header>
+
+    <main class="pt-16 px-4 max-w-lg mx-auto w-full space-y-4">
+        <!-- Search -->
+        <div class="relative">
+            <input id="searchInput"
+                class="w-full bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm"
+                placeholder="ค้นหาเครื่องมือ..." type="text" />
+            <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">search</span>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+            <button data-filter="ALL" class="filter-btn px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors bg-primary text-white">
+                ทั้งหมด
+            </button>
+            <button data-filter="MOVABLE" class="filter-btn px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors bg-white dark:bg-card-dark text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                ย้ายได้
+            </button>
+            <button data-filter="FIXED" class="filter-btn px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors bg-white dark:bg-card-dark text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                ติดห้อง
+            </button>
+        </div>
+
+        <!-- Header with Add Button -->
+        <div class="flex items-center justify-end mb-3">
+            <button id="addMachineBtn"
+                class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium shadow-sm hover:bg-primary-dark transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                เพิ่มเครื่อง
+            </button>
+        </div>
+
+        <!-- Machines List -->
+        <div id="machinesContainer" class="space-y-3">
+            <!-- Loading -->
+            <div class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p class="mt-2 text-gray-600 dark:text-gray-400 text-sm">กำลังโหลด...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Machine Modal -->
+    <div id="machineModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div
+                class="bg-white dark:bg-card-dark rounded-t-3xl w-full max-w-lg p-6 space-y-4 animate-slide-up shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="modalTitle" class="text-xl font-bold text-gray-800 dark:text-white">เพิ่มเครื่องมือใหม่</h2>
+                    <button id="closeModalBtn"
+                        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                        <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">close</span>
+                    </button>
+                </div>
+
+                <form id="machineForm" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span class="material-symbols-outlined text-[18px]">medical_services</span>
+                            ชื่อเครื่องมือ
+                        </label>
+                        <input id="machineName" type="text"
+                            class="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm"
+                            placeholder="เช่น MiraDry" required />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span class="material-symbols-outlined text-[18px]">category</span>
+                            ประเภท
+                        </label>
+                        <select id="machineType"
+                            class="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm">
+                            <option value="MOVABLE">ย้ายได้</option>
+                            <option value="FIXED">ติดห้อง</option>
+                        </select>
+                    </div>
+
+                    <div id="roomSelectContainer" class="space-y-2 hidden">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span class="material-symbols-outlined text-[18px]">meeting_room</span>
+                            ห้องที่ติดตั้ง
+                        </label>
+                        <select id="machineRoom"
+                            class="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm">
+                            <option value="">เลือกห้อง</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                เวลาเตรียมเครื่อง (นาที)
+                            </label>
+                            <input id="machinePrepTime" type="number" min="0" max="60"
+                                class="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm"
+                                placeholder="15" value="15" />
+                            <p class="text-[10px] text-gray-500">เวลาก่อนเริ่มใช้งาน</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                <span class="material-symbols-outlined text-[16px]">cleaning_services</span>
+                                เวลาเก็บเครื่อง (นาที)
+                            </label>
+                            <input id="machineCleanupTime" type="number" min="0" max="60"
+                                class="w-full bg-gray-50 dark:bg-gray-800 border-0 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary shadow-sm"
+                                placeholder="15" value="15" />
+                            <p class="text-[10px] text-gray-500">เวลาหลังใช้งานเสร็จ</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">พร้อมใช้งาน</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="machineAvailable" type="checkbox" class="sr-only peer" checked>
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" id="cancelBtn"
+                            class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium shadow-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            ยกเลิก
+                        </button>
+                        <button type="submit"
+                            class="flex-1 py-3 bg-primary text-white rounded-xl font-medium shadow-sm hover:bg-primary-dark transition-colors">
+                            บันทึก
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 py-2 px-4 flex justify-between items-center z-40 text-[10px] pb-safe">
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="users.html">
+            <span class="material-symbols-outlined text-2xl">group</span>
+            <span class="font-medium">รายชื่อ</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="booking-calendar.html">
+            <span class="material-symbols-outlined text-2xl">calendar_month</span>
+            <span class="font-medium">นัดหมาย</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition relative -mt-6"
+            href="dashboard.html">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-lg flex items-center justify-center mb-1 ring-4 ring-white dark:ring-gray-800">
+                <span class="material-symbols-outlined text-white text-2xl">dashboard</span>
+            </div>
+            <span class="font-medium text-gray-400 dark:text-gray-500">ภาพรวม</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="rooms.html">
+            <span class="material-symbols-outlined text-2xl">meeting_room</span>
+            <span class="font-medium">ห้อง</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-primary" href="machines.html">
+            <span class="material-symbols-outlined text-2xl">medical_services</span>
+            <span class="font-medium">เครื่องมือ</span>
+        </a>
+    </nav>
+
+    <script>
+        // Configuration - Auto-detect environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8787' 
+            : window.location.hostname.match(/^192\.168\.\d+\.\d+$/) || window.location.hostname.match(/^10\.\d+\.\d+\.\d+$/)
+            ? `http://${window.location.hostname}:8787`
+            : window.location.hostname.includes('qa.') 
+                ? 'https://beauty-clinic-api-qa.apichais-leo01.workers.dev'
+                : 'https://beauty-clinic-api.apichais-leo01.workers.dev';
+
+        // Profile menu toggle
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close profile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const profileBtn = document.getElementById('profileBtn');
+            if (!menu.contains(e.target) && !profileBtn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Logout function
+        async function handleLogout() {
+            document.getElementById('profileMenu').classList.add('hidden');
+            const confirmed = await showConfirmDialog(
+                'ออกจากระบบ',
+                'คุณต้องการออกจากระบบใช่หรือไม่?'
+            );
+            
+            if (confirmed) {
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('google_calendar_token');
+                sessionStorage.removeItem('google_calendar_refresh_token');
+                window.location.href = '/';
+            }
+        }
+
+        // Loading dialog functions
+        function showLoading() {
+            document.getElementById('loadingDialog').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingDialog').classList.add('hidden');
+        }
+
+        // Custom confirmation dialog
+        function showConfirmDialog(title, message) {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('confirmDialog');
+                const titleEl = document.getElementById('confirmTitle');
+                const messageEl = document.getElementById('confirmMessage');
+                const okBtn = document.getElementById('confirmOkBtn');
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                dialog.classList.remove('hidden');
+                
+                const handleOk = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+                
+                const handleCancel = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+                
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
+            });
+        }
+
+        let allMachines = [];
+        let allRooms = [];
+        let editingMachineId = null;
+        let currentFilter = 'ALL';
+
+        // Auth check
+        function checkAuth() {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return null;
+            }
+            return token;
+        }
+
+        // API call helper
+        async function apiCall(endpoint, options = {}) {
+            const token = checkAuth();
+            if (!token) return null;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        window.location.href = '/';
+                        return null;
+                    }
+                    const error = await response.json();
+                    throw new Error(error.error || `HTTP ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Load machines and rooms
+        async function loadData() {
+            try {
+                const [machines, rooms] = await Promise.all([
+                    apiCall('/api/machines?category=MEDICAL'),
+                    apiCall('/api/rooms?type=PROCEDURE')
+                ]);
+                
+                allMachines = machines || [];
+                allRooms = rooms || [];
+                
+                // Update room select options
+                const roomSelect = document.getElementById('machineRoom');
+                roomSelect.innerHTML = '<option value="">เลือกห้อง</option>' +
+                    allRooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                
+                applyFilter();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้', 'error');
+            }
+        }
+
+        // Apply filter
+        function applyFilter() {
+            let filtered = allMachines;
+            
+            if (currentFilter !== 'ALL') {
+                filtered = allMachines.filter(m => m.type === currentFilter);
+            }
+            
+            renderMachines(filtered);
+        }
+
+        // Render machines
+        function renderMachines(machines) {
+            const container = document.getElementById('machinesContainer');
+
+            if (machines.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">medical_services</span>
+                        <p class="text-gray-600 dark:text-gray-400 text-lg">ไม่พบเครื่องมือ</p>
+                        <p class="text-gray-400 text-sm mt-1">ลองค้นหาด้วยคำอื่น หรือเพิ่มเครื่องมือใหม่</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = machines.map(machine => {
+                const room = allRooms.find(r => r.id === machine.room_id);
+                return `
+                    <div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${machine.is_available ? 'from-primary to-primary-dark' : 'from-gray-400 to-gray-500'} flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white text-[24px]">medical_services</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-sm text-gray-800 dark:text-white truncate">${machine.name}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-medium ${machine.type === 'FIXED' ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'}">
+                                        ${machine.type === 'FIXED' ? 'ติดห้อง' : 'ย้ายได้'}
+                                    </span>
+                                    ${machine.type === 'FIXED' && room ? `
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[12px]">meeting_room</span>
+                                            ${room.name}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${machine.is_available ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}">
+                                    ${machine.is_available ? '✓ พร้อมใช้งาน' : '✕ ไม่พร้อม'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <button onclick="editMachine('${machine.id}')" class="flex-1 py-2 px-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                                แก้ไข
+                            </button>
+                            <button onclick="deleteMachine('${machine.id}', '${machine.name}')" class="flex-1 py-2 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                                ลบ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Search machines
+        function searchMachines(query) {
+            let filtered = allMachines;
+            
+            if (currentFilter !== 'ALL') {
+                filtered = filtered.filter(m => m.type === currentFilter);
+            }
+            
+            if (query) {
+                const searchLower = query.toLowerCase();
+                filtered = filtered.filter(m =>
+                    m.name.toLowerCase().includes(searchLower) ||
+                    m.id.toLowerCase().includes(searchLower)
+                );
+            }
+            
+            renderMachines(filtered);
+        }
+
+        // Show/hide room select based on type
+        function toggleRoomSelect() {
+            const type = document.getElementById('machineType').value;
+            const roomContainer = document.getElementById('roomSelectContainer');
+            
+            if (type === 'FIXED') {
+                roomContainer.classList.remove('hidden');
+                document.getElementById('machineRoom').required = true;
+            } else {
+                roomContainer.classList.add('hidden');
+                document.getElementById('machineRoom').required = false;
+                document.getElementById('machineRoom').value = '';
+            }
+        }
+
+        // Show modal
+        function showModal(title, machine = null) {
+            editingMachineId = machine ? machine.id : null;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('machineName').value = machine ? machine.name : '';
+            document.getElementById('machineType').value = machine ? machine.type : 'MOVABLE';
+            document.getElementById('machineRoom').value = machine ? (machine.room_id || '') : '';
+            document.getElementById('machinePrepTime').value = machine ? (machine.prep_time_minutes || 15) : 15;
+            document.getElementById('machineCleanupTime').value = machine ? (machine.cleanup_time_minutes || 15) : 15;
+            document.getElementById('machineAvailable').checked = machine ? machine.is_available : true;
+            
+            toggleRoomSelect();
+            document.getElementById('machineModal').classList.remove('hidden');
+        }
+
+        // Hide modal
+        function hideModal() {
+            document.getElementById('machineModal').classList.add('hidden');
+            editingMachineId = null;
+        }
+
+        // Edit machine
+        window.editMachine = function (machineId) {
+            const machine = allMachines.find(m => m.id === machineId);
+            if (machine) {
+                showModal('แก้ไขเครื่องมือ', machine);
+            }
+        };
+
+        // Delete machine
+        window.deleteMachine = async function (machineId, machineName) {
+            const confirmed = await showConfirmDialog(
+                'ลบเครื่องมือ',
+                `คุณต้องการลบเครื่องมือ "${machineName}" ใช่หรือไม่?`
+            );
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                showLoading();
+                await apiCall(`/api/machines/${machineId}`, { method: 'DELETE' });
+                hideLoading();
+                showNotification('ลบสำเร็จ', `ลบเครื่องมือ "${machineName}" เรียบร้อยแล้ว`, 'success');
+                await loadData();
+            } catch (error) {
+                hideLoading();
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถลบเครื่องมือได้', 'error');
+            }
+        };
+
+        // Handle form submit
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('machineName').value.trim();
+            const type = document.getElementById('machineType').value;
+            const roomId = document.getElementById('machineRoom').value;
+            const isAvailable = document.getElementById('machineAvailable').checked;
+            const prepTime = parseInt(document.getElementById('machinePrepTime').value) || 15;
+            const cleanupTime = parseInt(document.getElementById('machineCleanupTime').value) || 15;
+
+            if (!name) {
+                showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อเครื่องมือ', 'error');
+                return;
+            }
+
+            if (type === 'FIXED' && !roomId) {
+                showNotification('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกห้องสำหรับเครื่องติดห้อง', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                const machineData = {
+                    name,
+                    type,
+                    is_available: isAvailable,
+                    room_id: type === 'FIXED' ? roomId : null,
+                    prep_time_minutes: prepTime,
+                    cleanup_time_minutes: cleanupTime
+                };
+
+                if (editingMachineId) {
+                    await apiCall(`/api/machines/${editingMachineId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(machineData)
+                    });
+                    hideLoading();
+                    showNotification('บันทึกสำเร็จ', `แก้ไขเครื่องมือ "${name}" เรียบร้อยแล้ว`, 'success');
+                } else {
+                    await apiCall('/api/machines', {
+                        method: 'POST',
+                        body: JSON.stringify(machineData)
+                    });
+                    hideLoading();
+                    showNotification('สร้างสำเร็จ', `สร้างเครื่องมือ "${name}" เรียบร้อยแล้ว`, 'success');
+                }
+
+                hideModal();
+                await loadData();
+            } catch (error) {
+                hideLoading();
+                showNotification('เกิดข้อผิดพลาด', error.message, 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(title, message, type = 'info') {
+            const dialog = document.getElementById('notificationDialog');
+            const icon = document.getElementById('notificationIcon');
+            const iconSpan = icon.querySelector('.material-symbols-outlined');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            const okBtn = document.getElementById('notificationOkBtn');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            // Reset classes
+            icon.className = 'flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full';
+            okBtn.className = 'w-full px-4 py-2.5 rounded-xl font-medium hover:opacity-90 transition';
+            
+            if (type === 'error') {
+                icon.classList.add('bg-red-100', 'dark:bg-red-900/20');
+                iconSpan.className = 'material-symbols-outlined text-red-600 dark:text-red-400 text-2xl';
+                iconSpan.textContent = 'error';
+                okBtn.classList.add('bg-red-600', 'text-white');
+            } else if (type === 'success') {
+                icon.classList.add('bg-green-100', 'dark:bg-green-900/20');
+                iconSpan.className = 'material-symbols-outlined text-green-600 dark:text-green-400 text-2xl';
+                iconSpan.textContent = 'check_circle';
+                okBtn.classList.add('bg-green-600', 'text-white');
+            } else {
+                icon.classList.add('bg-blue-100', 'dark:bg-blue-900/20');
+                iconSpan.className = 'material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl';
+                iconSpan.textContent = 'info';
+                okBtn.classList.add('bg-primary', 'text-white');
+            }
+            
+            dialog.classList.remove('hidden');
+            
+            const handleOk = () => {
+                dialog.classList.add('hidden');
+                okBtn.removeEventListener('click', handleOk);
+            };
+            
+            okBtn.addEventListener('click', handleOk);
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+                if (user.name) {
+                    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    
+                    // Update profile button
+                    const profileBtn = document.getElementById('profileBtn');
+                    if (profileBtn) {
+                        profileBtn.textContent = initials;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        // Initialize
+        async function init() {
+            checkAuth();
+            await loadUserInfo();
+            await loadData();
+
+            // Event listeners
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'dashboard.html';
+            });
+
+            document.getElementById('addMachineBtn').addEventListener('click', () => {
+                showModal('เพิ่มเครื่องมือใหม่');
+            });
+
+            document.getElementById('closeModalBtn').addEventListener('click', hideModal);
+            document.getElementById('cancelBtn').addEventListener('click', hideModal);
+
+            document.getElementById('machineForm').addEventListener('submit', handleSubmit);
+
+            document.getElementById('machineType').addEventListener('change', toggleRoomSelect);
+
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchMachines(e.target.value);
+            });
+
+            // Filter button listeners
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const filterValue = e.target.dataset.filter;
+                    currentFilter = filterValue;
+                    
+                    // Update active state
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white');
+                        b.classList.add('bg-white', 'dark:bg-card-dark', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-200', 'dark:border-gray-700');
+                    });
+                    e.target.classList.remove('bg-white', 'dark:bg-card-dark', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-200', 'dark:border-gray-700');
+                    e.target.classList.add('bg-primary', 'text-white');
+                    
+                    searchMachines(document.getElementById('searchInput').value);
+                });
+            });
+
+            // Close modal on backdrop click
+            document.getElementById('machineModal').addEventListener('click', (e) => {
+                if (e.target.id === 'machineModal') {
+                    hideModal();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- Profile Menu -->
+    <div id="profileMenu" class="hidden fixed top-16 right-4 z-[60] w-64">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 bg-gradient-to-br from-primary/10 to-primary-dark/10 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                        AD
+                    </div>
+                    <div class="flex-1">
+                        <p id="profileName" class="font-semibold text-gray-900 dark:text-white text-sm">User</p>
+                        <p id="profileEmail" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="py-2">
+                <button onclick="handleLogout()" class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">logout</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">ออกจากระบบ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Dialog -->
+    <div id="loadingDialog" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl p-6 flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">กำลังดำเนินการ...</p>
+        </div>
+    </div>
+
+    <!-- Custom Notification Dialog -->
+    <div id="notificationDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div id="notificationIcon" class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full">
+                    <span class="material-symbols-outlined text-2xl"></span>
+                </div>
+                <h3 id="notificationTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2"></h3>
+                <p id="notificationMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <button id="notificationOkBtn" class="w-full px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div id="confirmDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                    <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-2xl">warning</span>
+                </div>
+                <h3 id="confirmTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2"></h3>
+                <p id="confirmMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <div class="flex gap-3">
+                    <button id="confirmCancelBtn" class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        ยกเลิก
+                    </button>
+                    <button id="confirmOkBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition">
+                        ยืนยัน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

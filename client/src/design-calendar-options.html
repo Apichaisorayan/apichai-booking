@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar Day View — Design Options</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    /* Navigation */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #002b38;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav h1 {
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-tab.active {
+      background: #00abb1;
+      border-color: #00abb1;
+      font-weight: 600;
+    }
+
+    /* Section */
+    .section {
+      display: none;
+      padding: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+    }
+
+    .section-header h2 {
+      font-size: 24px;
+      color: #002b38;
+      margin-bottom: 4px;
+    }
+
+    .section-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .section-header .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .badge-new {
+      background: #00abb1;
+      color: white;
+    }
+
+    .badge-improve {
+      background: #e8d8a1;
+      color: #002b38;
+    }
+
+    /* Pros/Cons */
+    .analysis {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .pros,
+    .cons {
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .pros {
+      background: #e6f9f0;
+      border: 1px solid #b2e8d0;
+    }
+
+    .cons {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .pros h4 {
+      color: #059669;
+      margin-bottom: 8px;
+    }
+
+    .cons h4 {
+      color: #dc2626;
+      margin-bottom: 8px;
+    }
+
+    .pros li,
+    .cons li {
+      margin-left: 16px;
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+
+    /* Calendar mockup container */
+    .calendar-mock {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .calendar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fafafa;
+    }
+
+    .calendar-header .date {
+      font-size: 20px;
+      font-weight: 600;
+      color: #002b38;
+    }
+
+    .calendar-header .sub {
+      font-size: 13px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    /* Time grid */
+    .time-grid {
+      display: flex;
+      position: relative;
+    }
+
+    .time-labels {
+      width: 72px;
+      flex-shrink: 0;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .time-label {
+      height: 80px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: #999;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .grid-content {
+      flex: 1;
+      position: relative;
+    }
+
+    .grid-row {
+      height: 80px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    /* ========================================= */
+    /* OPTION A: Doctor Timeline View            */
+    /* ===AppointmentsCalendar.tsx====================================== */
+    .doctor-timeline {
+      display: flex;
+    }
+
+    .doctor-timeline .time-labels-a {
+      width: 72px;
+      flex-shrink: 0;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doctor-col-header {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fafafa;
+    }
+
+    .doctor-col-header .time-spacer {
+      width: 72px;
+      flex-shrink: 0;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doctor-col-header .doc-header {
+      flex: 1;
+      text-align: center;
+      padding: 12px 8px;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doctor-col-header .doc-header:last-child {
+      border-right: none;
+    }
+
+    .doc-header .doc-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #002b38;
+    }
+
+    .doc-header .doc-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #00abb1;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .doctor-grid {
+      display: flex;
+    }
+
+    .doctor-grid .time-labels-a {
+      width: 72px;
+      flex-shrink: 0;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doctor-grid .doc-column {
+      flex: 1;
+      position: relative;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    .doctor-grid .doc-column:last-child {
+      border-right: none;
+    }
+
+    .doc-grid-row {
+      height: 80px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .doc-grid-row:first-child {
+      border-top: 1px solid #e5e7eb;
+    }
+
+    /* Doctor event blocks */
+    .doc-event {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 2;
+    }
+
+    .doc-event:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 5;
+    }
+
+    .doc-event.busy {
+      background: linear-gradient(135deg, #00abb1 0%, #008a8f 100%);
+      color: white;
+      border-left: 4px solid #006b70;
+    }
+
+    .doc-event.free {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px dashed #86efac;
+      border-left: 4px solid #86efac;
+    }
+
+    .doc-event.busy-consult {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border-left: 4px solid #b45309;
+    }
+
+    .doc-event .ev-time {
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .doc-event .ev-patient {
+      font-weight: 600;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .doc-event .ev-proc {
+      opacity: 0.85;
+      font-size: 10px;
+      margin-top: 1px;
+    }
+
+    .doc-event .ev-room {
+      opacity: 0.7;
+      font-size: 10px;
+    }
+
+    /* ========================================= */
+    /* OPTION B: Unified Card with segments      */
+    /* ========================================= */
+    .unified-event {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 2;
+    }
+
+    .unified-event:hover {
+      transform: scale(1.01);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      z-index: 5;
+    }
+
+    .unified-event .card-header {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .unified-event .card-header .patient-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+    }
+
+    .unified-event .card-header .proc-name {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .unified-event .card-header .more-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .seg-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      font-size: 11px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .seg-row .seg-time {
+      font-weight: 600;
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .seg-row .seg-label {
+      flex: 1;
+    }
+
+    .seg-row .seg-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .seg-row.busy {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .seg-row.free {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .seg-badge.busy-badge {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    .seg-badge.free-badge {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Card info row */
+    .card-info {
+      padding: 6px 12px;
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      opacity: 0.85;
+      flex-wrap: wrap;
+    }
+
+    .card-info span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* ========================================= */
+    /* OPTION C: Busy Indicator on existing      */
+    /* ========================================= */
+    .existing-event {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 2;
+      transition: transform 0.15s;
+    }
+
+    .existing-event:hover {
+      transform: scale(1.01);
+      z-index: 5;
+    }
+
+    .busy-strip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+    }
+
+    .busy-strip.is-busy {
+      background: #ef4444;
+    }
+
+    .busy-strip.is-free {
+      background: #22c55e;
+    }
+
+    .existing-event .ev-content {
+      padding: 6px 10px 6px 14px;
+    }
+
+    .existing-event .ev-time-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .existing-event .ev-time-badge .time {
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      font-family: monospace;
+    }
+
+    .existing-event .ev-time-badge .badge-sm {
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .badge-busy {
+      background: #fecaca;
+      color: #dc2626;
+    }
+
+    .badge-free {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .existing-event .ev-patient-name {
+      font-weight: 700;
+      font-size: 12px;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+
+    .existing-event .ev-details {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+
+    /* ========================================= */
+    /* OPTION D: Combined A + B                  */
+    /* ========================================= */
+    /* Reuses styles from A and B */
+
+    /* Comparison table */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+      font-size: 13px;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    .compare-table th {
+      background: #002b38;
+      color: white;
+      font-weight: 600;
+    }
+
+    .compare-table tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .compare-table .check {
+      color: #059669;
+      font-weight: 700;
+    }
+
+    .compare-table .cross {
+      color: #dc2626;
+    }
+
+    .compare-table .partial {
+      color: #d97706;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .analysis {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    /* Label */
+    .label-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .label-tag.doctor-busy {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .label-tag.doctor-free {
+      background: #dcfce7;
+      color: #166534;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <div class="nav">
+    <h1>🎨 Calendar Design Options</h1>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showSection('current')">ปัจจุบัน</button>
+      <button class="nav-tab" onclick="showSection('optionA')">A: Doctor Timeline</button>
+      <button class="nav-tab" onclick="showSection('optionB')">B: Unified Card</button>
+      <button class="nav-tab" onclick="showSection('optionC')">C: Busy Indicator</button>
+      <button class="nav-tab" onclick="showSection('optionD')">D: A + B รวม</button>
+      <button class="nav-tab" onclick="showSection('compare')">📊 เปรียบเทียบ</button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CURRENT DESIGN                               -->
+  <!-- ============================================ -->
+  <div id="current" class="section active">
+    <div class="section-header">
+      <h2>Design ปัจจุบัน</h2>
+      <p>แต่ละ segment แยกเป็น block อิสระ — Consultation, Preparation, Doctor Treatment, Machine Active</p>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">
+        <h4>✅ จุดดี</h4>
+        <ul>
+          <li>แสดง segment ครบทุกขั้นตอน</li>
+          <li>มี Badge บอก type ของแต่ละ segment</li>
+          <li>Drag & Drop ย้ายเวลาได้</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>❌ ปัญหาสำหรับแพทย์</h4>
+        <ul>
+          <li>Segments แยกกัน ดูเหมือนหลาย event</li>
+          <li><strong>ไม่มีชื่อผู้ป่วย</strong>บน event card</li>
+          <li>แพทย์ต้องตีความเองว่าช่วงไหน busy/free</li>
+          <li>Appointment ที่ overlap ดูสับสน</li>
+          <li>สีไม่ช่วยแยก busy vs free ชัดเจน</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calendar-mock">
+      <div class="calendar-header">
+        <div class="date">พ — 11 กุมภาพันธ์ 2569</div>
+        <div class="sub">Design ปัจจุบัน (segments แยกกัน)</div>
+      </div>
+      <div class="time-grid">
+        <div class="time-labels">
+          <div class="time-label">9:00</div>
+          <div class="time-label">10:00</div>
+          <div class="time-label">11:00</div>
+          <div class="time-label">12:00</div>
+        </div>
+        <div class="grid-content">
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+
+          <!-- miraDry Booking 1 - segments แยก -->
+          <div
+            style="position:absolute; top:0; left:8px; width:45%; height:38px; background:#00abb120; border-left:4px solid #00abb1; border-radius:6px; padding:6px 10px; font-size:11px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span style="font-family:monospace; font-weight:600;">09:00 - 09:30</span>
+              <span
+                style="background:#00abb1; color:white; padding:1px 8px; border-radius:10px; font-size:9px; font-weight:700;">Consultation</span>
+            </div>
+            <div style="font-size:10px; color:#666; margin-top:2px;">👤 DR1 · 🏥 TR4 · ⚙️ miraDry</div>
+          </div>
+
+          <div
+            style="position:absolute; top:40px; left:8px; width:45%; height:38px; background:#f5f5f5; border-left:4px solid #e2e8f0; border-radius:6px; padding:6px 10px; font-size:11px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span style="font-family:monospace; font-weight:600;">09:30 - 10:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 8px; border-radius:10px; font-size:9px; font-weight:700;">Preparation
+                (Free)</span>
+            </div>
+          </div>
+
+          <div
+            style="position:absolute; top:80px; left:8px; width:45%; height:28px; background:#fee2e220; border-left:4px solid #ef4444; border-radius:6px; padding:4px 10px; font-size:11px;">
+            <span style="font-family:monospace; font-weight:600;">10:00 - 10:30</span>
+            <span
+              style="background:#fecaca; color:#991b1b; padding:1px 8px; border-radius:10px; font-size:9px; font-weight:700; margin-left:4px;">Doctor
+              Treatment</span>
+          </div>
+
+          <div
+            style="position:absolute; top:110px; left:8px; width:45%; height:28px; background:#f5f5f5; border-left:4px solid #e2e8f0; border-radius:6px; padding:4px 10px; font-size:11px;">
+            <span style="font-family:monospace; font-weight:600;">10:30 - 12:00</span>
+            <span
+              style="background:#f1f5f9; color:#475569; padding:1px 8px; border-radius:10px; font-size:9px; font-weight:700; margin-left:4px;">Machine
+              Active</span>
+          </div>
+
+          <!-- ปัญหา: ไม่มีชื่อผู้ป่วย, segments แยกกัน -->
+          <div
+            style="position:absolute; top:150px; left:8px; right:8px; padding:12px; background:#fff3cd; border:1px dashed #ffc107; border-radius:8px; font-size:12px; color:#856404;">
+            ⚠️ <strong>ปัญหา:</strong> ไม่มีชื่อผู้ป่วยบน card, segments แยกกันดูเหมือนหลาย event,
+            แพทย์ต้องตีความเองว่าช่วงไหน busy
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- OPTION A: Doctor Timeline View               -->
+  <!-- ============================================ -->
+  <div id="optionA" class="section">
+    <div class="section-header">
+      <h2>Option A: Doctor Timeline View <span class="badge badge-new">NEW VIEW</span></h2>
+      <p>จัดกลุ่มตามแพทย์ — แต่ละ column = 1 หมอ — เห็นปุ๊บรู้เลยว่าต้องเข้าเมื่อไหร่</p>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">
+        <h4>✅ ข้อดี</h4>
+        <ul>
+          <li><strong>แพทย์เห็นตารางตัวเองทันที</strong> — ไม่ต้องหาจาก event ทั้งหมด</li>
+          <li>สีเข้ม = ต้องเข้า, สีจาง = ว่าง — เข้าใจง่ายมาก</li>
+          <li>เห็นชื่อผู้ป่วย + procedure ชัดเจน</li>
+          <li>เปรียบเทียบตารางหมอหลายคนได้พร้อมกัน</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>❌ ข้อเสีย</h4>
+        <ul>
+          <li>ต้องสร้าง view ใหม่ทั้งหมด (งานเยอะ)</li>
+          <li>ถ้ามีหมอหลายคน column จะแคบ</li>
+          <li>ไม่เห็นข้อมูลห้อง/เครื่องมือชัดเจน (เน้นหมอ)</li>
+          <li>Drag & Drop ต้อง redesign</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calendar-mock">
+      <div class="calendar-header">
+        <div class="date">พ — 11 กุมภาพันธ์ 2569</div>
+        <div class="sub">Option A: Doctor Timeline — แต่ละ column = 1 แพทย์</div>
+      </div>
+
+      <!-- Doctor column headers -->
+      <div class="doctor-col-header">
+        <div class="time-spacer"></div>
+        <div class="doc-header">
+          <div class="doc-avatar">DR</div>
+          <div class="doc-name">DR1</div>
+        </div>
+        <div class="doc-header">
+          <div class="doc-avatar" style="background:#c89666;">DJ</div>
+          <div class="doc-name">DR James</div>
+        </div>
+        <div class="doc-header">
+          <div class="doc-avatar" style="background:#4d7c8a;">DL</div>
+          <div class="doc-name">DR Leo</div>
+        </div>
+      </div>
+
+      <!-- Doctor grid -->
+      <div class="doctor-grid">
+        <div class="time-labels-a">
+          <div class="time-label">9:00</div>
+          <div class="time-label">10:00</div>
+          <div class="time-label">11:00</div>
+          <div class="time-label">12:00</div>
+        </div>
+
+        <!-- DR1 Column -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <!-- Consult: BUSY -->
+          <div class="doc-event busy-consult" style="top:0; height:38px;">
+            <div class="ev-time">09:00 - 09:30</div>
+            <div class="ev-patient">คุณสมชาย — miraDry</div>
+          </div>
+          <!-- Prep: FREE -->
+          <div class="doc-event free" style="top:40px; height:38px;">
+            <div class="ev-time">09:30 - 10:00</div>
+            <div class="ev-proc">🟢 ว่าง (Prep คุณสมชาย)</div>
+          </div>
+          <!-- Treatment: BUSY -->
+          <div class="doc-event busy" style="top:80px; height:38px;">
+            <div class="ev-time">10:00 - 10:30</div>
+            <div class="ev-patient">คุณสมชาย — Treatment</div>
+            <div class="ev-room">TR4 · miraDry</div>
+          </div>
+        </div>
+
+        <!-- DR James Column -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <!-- Consult: BUSY -->
+          <div class="doc-event busy-consult" style="top:0; height:38px;">
+            <div class="ev-time">09:00 - 09:30</div>
+            <div class="ev-patient">คุณวิภา — miraDry2</div>
+          </div>
+          <!-- Prep: FREE -->
+          <div class="doc-event free" style="top:40px; height:38px;">
+            <div class="ev-time">09:30 - 10:00</div>
+            <div class="ev-proc">🟢 ว่าง (Prep คุณวิภา)</div>
+          </div>
+          <!-- Treatment: BUSY -->
+          <div class="doc-event busy" style="top:80px; height:38px;">
+            <div class="ev-time">10:00 - 10:30</div>
+            <div class="ev-patient">คุณวิภา — Treatment</div>
+            <div class="ev-room">TR3 · miraDry2</div>
+          </div>
+          <!-- Another booking -->
+          <div class="doc-event busy" style="top:0; height:0; display:none;"></div>
+        </div>
+
+        <!-- DR Leo Column -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <!-- Prep: FREE (Ulthera) -->
+          <div class="doc-event free" style="top:0; height:78px;">
+            <div class="ev-time">09:00 - 10:00</div>
+            <div class="ev-proc">🟢 ว่าง (Prep คุณนภา — Ulthera)</div>
+          </div>
+          <!-- Treatment: BUSY -->
+          <div class="doc-event busy" style="top:80px; height:78px;">
+            <div class="ev-time">10:00 - 11:00</div>
+            <div class="ev-patient">คุณนภา — Ulthera 300-400 lines</div>
+            <div class="ev-room">TR2 · Ulthera</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:16px; background:#e0f7fa; border-radius:8px; font-size:13px; color:#006064;">
+      💡 <strong>Key Insight:</strong> แพทย์ดูแค่ column ตัวเอง — สีเข้ม (teal/amber) = ต้องเข้า, สีเขียวจาง = ว่าง
+      ไม่ต้องตีความอะไรเลย
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- OPTION B: Unified Card                       -->
+  <!-- ============================================ -->
+  <div id="optionB" class="section">
+    <div class="section-header">
+      <h2>Option B: Unified Card <span class="badge badge-improve">IMPROVE</span></h2>
+      <p>รวม segments เป็น card เดียว — ภายในแบ่งแถบสี busy/free — ชื่อผู้ป่วยเด่นชัด</p>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">
+        <h4>✅ ข้อดี</h4>
+        <ul>
+          <li><strong>1 appointment = 1 card</strong> — ไม่สับสน</li>
+          <li>ชื่อผู้ป่วย + procedure เด่นชัดที่ header</li>
+          <li>แถบสีภายใน card บอก busy/free ชัดเจน</li>
+          <li>แก้ไขจาก code เดิมได้ง่าย (ปรับ renderDayView)</li>
+          <li>Drag & Drop ยังใช้ได้เหมือนเดิม</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>❌ ข้อเสีย</h4>
+        <ul>
+          <li>Card ยาว อาจบังเวลาอื่น</li>
+          <li>ยังไม่ได้จัดกลุ่มตามหมอ (ต้องหาจาก card)</li>
+          <li>Overlap ของ card อาจซับซ้อน</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calendar-mock">
+      <div class="calendar-header">
+        <div class="date">พ — 11 กุมภาพันธ์ 2569</div>
+        <div class="sub">Option B: Unified Card — 1 appointment = 1 card</div>
+      </div>
+      <div class="time-grid">
+        <div class="time-labels">
+          <div class="time-label">9:00</div>
+          <div class="time-label">10:00</div>
+          <div class="time-label">11:00</div>
+          <div class="time-label">12:00</div>
+        </div>
+        <div class="grid-content">
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+
+          <!-- Unified Card 1: miraDry (DR1) -->
+          <div class="unified-event"
+            style="top:0; width:45%; height:180px; background: linear-gradient(180deg, #00abb1 0%, #008a8f 100%);">
+            <div class="card-header">
+              <div>
+                <div class="patient-name">คุณสมชาย</div>
+                <div class="proc-name">miraDry · DR1 · TR4</div>
+              </div>
+              <div class="more-btn">⋮</div>
+            </div>
+            <div class="seg-row busy">
+              <span class="seg-time" style="color:white;">09:00 - 09:30</span>
+              <span class="seg-label" style="color:white;">Consultation</span>
+              <span class="seg-badge busy-badge">BUSY</span>
+            </div>
+            <div class="seg-row free">
+              <span class="seg-time" style="color:#166534;">09:30 - 10:00</span>
+              <span class="seg-label" style="color:#166534;">Preparation</span>
+              <span class="seg-badge free-badge">FREE</span>
+            </div>
+            <div class="seg-row busy">
+              <span class="seg-time" style="color:white;">10:00 - 10:30</span>
+              <span class="seg-label" style="color:white;">Doctor Treatment</span>
+              <span class="seg-badge busy-badge">BUSY</span>
+            </div>
+            <div class="seg-row free">
+              <span class="seg-time" style="color:#166534;">10:30 - 12:00</span>
+              <span class="seg-label" style="color:#166534;">Machine Active</span>
+              <span class="seg-badge free-badge">FREE</span>
+            </div>
+            <div class="card-info" style="color:rgba(255,255,255,0.8);">
+              <span>👤 DR1</span>
+              <span>🏥 TR4</span>
+              <span>⚙️ miraDry</span>
+            </div>
+          </div>
+
+          <!-- Unified Card 2: miraDry (DR James) -->
+          <div class="unified-event"
+            style="top:0; left:calc(45% + 16px); width:45%; height:180px; background: linear-gradient(180deg, #c89666 0%, #a67f4a 100%);">
+            <div class="card-header">
+              <div>
+                <div class="patient-name">คุณวิภา</div>
+                <div class="proc-name">miraDry2 · DR James · TR3</div>
+              </div>
+              <div class="more-btn">⋮</div>
+            </div>
+            <div class="seg-row busy">
+              <span class="seg-time" style="color:white;">09:00 - 09:30</span>
+              <span class="seg-label" style="color:white;">Consultation</span>
+              <span class="seg-badge busy-badge">BUSY</span>
+            </div>
+            <div class="seg-row free">
+              <span class="seg-time" style="color:#166534;">09:30 - 10:00</span>
+              <span class="seg-label" style="color:#166534;">Preparation</span>
+              <span class="seg-badge free-badge">FREE</span>
+            </div>
+            <div class="seg-row busy">
+              <span class="seg-time" style="color:white;">10:00 - 10:30</span>
+              <span class="seg-label" style="color:white;">Doctor Treatment</span>
+              <span class="seg-badge busy-badge">BUSY</span>
+            </div>
+            <div class="seg-row free">
+              <span class="seg-time" style="color:#166534;">10:30 - 12:00</span>
+              <span class="seg-label" style="color:#166534;">Machine Active</span>
+              <span class="seg-badge free-badge">FREE</span>
+            </div>
+            <div class="card-info" style="color:rgba(255,255,255,0.8);">
+              <span>👤 DR James</span>
+              <span>🏥 TR3</span>
+              <span>⚙️ miraDry2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:16px; background:#e0f7fa; border-radius:8px; font-size:13px; color:#006064;">
+      💡 <strong>Key Insight:</strong> 1 card = 1 appointment ทั้งหมด — ภายใน card แบ่งแถบ BUSY (สีเข้ม) / FREE
+      (สีเขียว) — แพทย์เห็นทันทีว่าต้องเข้าช่วงไหน
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- OPTION C: Busy Indicator                     -->
+  <!-- ============================================ -->
+  <div id="optionC" class="section">
+    <div class="section-header">
+      <h2>Option C: Busy Indicator <span class="badge badge-improve">IMPROVE</span></h2>
+      <p>คง layout เดิม — เพิ่มแถบสีด้านข้าง (แดง=busy, เขียว=free) + เพิ่มชื่อผู้ป่วย</p>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">
+        <h4>✅ ข้อดี</h4>
+        <ul>
+          <li><strong>แก้ไขน้อยที่สุด</strong> — เพิ่มแค่ strip สี + ชื่อผู้ป่วย</li>
+          <li>ไม่เปลี่ยน layout เดิม ผู้ใช้ไม่ต้องเรียนรู้ใหม่</li>
+          <li>แถบแดง/เขียว เข้าใจง่าย</li>
+          <li>Drag & Drop ยังทำงานเหมือนเดิม</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>❌ ข้อเสีย</h4>
+        <ul>
+          <li>Segments ยังแยกกัน — ยังดูเหมือนหลาย event</li>
+          <li>ปรับปรุงน้อย อาจไม่ช่วยเรื่อง UX มากนัก</li>
+          <li>ยังไม่ได้จัดกลุ่มตามหมอ</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calendar-mock">
+      <div class="calendar-header">
+        <div class="date">พ — 11 กุมภาพันธ์ 2569</div>
+        <div class="sub">Option C: Busy Indicator — แถบสีด้านข้าง + ชื่อผู้ป่วย</div>
+      </div>
+      <div class="time-grid">
+        <div class="time-labels">
+          <div class="time-label">9:00</div>
+          <div class="time-label">10:00</div>
+          <div class="time-label">11:00</div>
+          <div class="time-label">12:00</div>
+        </div>
+        <div class="grid-content">
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+          <div class="grid-row"></div>
+
+          <!-- Segment 1: Consultation (BUSY) -->
+          <div class="existing-event" style="top:0; width:45%; height:56px; background:#00abb110;">
+            <div class="busy-strip is-busy"></div>
+            <div class="ev-content">
+              <div class="ev-time-badge">
+                <span class="time">09:00 - 09:30</span>
+                <span class="badge-sm badge-busy">🔴 BUSY</span>
+                <span
+                  style="background:#00abb1; color:white; padding:1px 6px; border-radius:8px; font-size:9px; font-weight:700;">Consultation</span>
+              </div>
+              <div class="ev-patient-name">คุณสมชาย</div>
+              <div class="ev-details">DR1 · TR4 · miraDry</div>
+            </div>
+          </div>
+
+          <!-- Segment 2: Preparation (FREE) -->
+          <div class="existing-event" style="top:58px; width:45%; height:42px; background:#f0fdf4;">
+            <div class="busy-strip is-free"></div>
+            <div class="ev-content">
+              <div class="ev-time-badge">
+                <span class="time">09:30 - 10:00</span>
+                <span class="badge-sm badge-free">🟢 FREE</span>
+                <span
+                  style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:9px; font-weight:700;">Preparation</span>
+              </div>
+              <div class="ev-details" style="color:#166534;">คุณสมชาย — แพทย์ว่าง</div>
+            </div>
+          </div>
+
+          <!-- Segment 3: Doctor Treatment (BUSY) -->
+          <div class="existing-event" style="top:102px; width:45%; height:42px; background:#fef2f2;">
+            <div class="busy-strip is-busy"></div>
+            <div class="ev-content">
+              <div class="ev-time-badge">
+                <span class="time">10:00 - 10:30</span>
+                <span class="badge-sm badge-busy">🔴 BUSY</span>
+                <span
+                  style="background:#fecaca; color:#991b1b; padding:1px 6px; border-radius:8px; font-size:9px; font-weight:700;">Doctor
+                  Treatment</span>
+              </div>
+              <div class="ev-patient-name">คุณสมชาย</div>
+            </div>
+          </div>
+
+          <!-- Segment 4: Machine Active (FREE) -->
+          <div class="existing-event" style="top:146px; width:45%; height:42px; background:#f8fafc;">
+            <div class="busy-strip is-free"></div>
+            <div class="ev-content">
+              <div class="ev-time-badge">
+                <span class="time">10:30 - 12:00</span>
+                <span class="badge-sm badge-free">🟢 FREE</span>
+                <span
+                  style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:8px; font-size:9px; font-weight:700;">Machine
+                  Active</span>
+              </div>
+              <div class="ev-details">คุณสมชาย — เครื่องทำงาน (แพทย์ว่าง)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:16px; background:#e0f7fa; border-radius:8px; font-size:13px; color:#006064;">
+      💡 <strong>Key Insight:</strong> แถบแดง/เขียวด้านซ้าย + Badge BUSY/FREE — แพทย์ scan ได้เร็ว แต่ segments
+      ยังแยกกันอยู่
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- OPTION D: Combined A + B                     -->
+  <!-- ============================================ -->
+  <div id="optionD" class="section">
+    <div class="section-header">
+      <h2>Option D: Doctor Timeline + Unified Card <span class="badge badge-new">BEST</span></h2>
+      <p>รวมจุดเด่นของ A + B — จัดกลุ่มตามหมอ + card รวม segments + ชื่อผู้ป่วยเด่น</p>
+    </div>
+
+    <div class="analysis">
+      <div class="pros">
+        <h4>✅ ข้อดี</h4>
+        <ul>
+          <li><strong>ดีที่สุดสำหรับแพทย์</strong> — เห็น column ตัวเอง + card รวมครบ</li>
+          <li>1 card = 1 appointment พร้อมแถบ busy/free</li>
+          <li>ชื่อผู้ป่วย + procedure เด่นชัด</li>
+          <li>เปรียบเทียบตารางหมอหลายคนได้</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>❌ ข้อเสีย</h4>
+        <ul>
+          <li>งานเยอะที่สุด (สร้าง view ใหม่ + redesign card)</li>
+          <li>อาจเป็น view เสริม ไม่ใช่ default</li>
+          <li>Column แคบถ้ามีหมอหลายคน</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calendar-mock">
+      <div class="calendar-header">
+        <div class="date">พ — 11 กุมภาพันธ์ 2569</div>
+        <div class="sub">Option D: Doctor Timeline + Unified Card — จัดกลุ่มตามหมอ + card รวม</div>
+      </div>
+
+      <!-- Doctor column headers -->
+      <div class="doctor-col-header">
+        <div class="time-spacer"></div>
+        <div class="doc-header">
+          <div class="doc-avatar">DR</div>
+          <div class="doc-name">DR1</div>
+        </div>
+        <div class="doc-header">
+          <div class="doc-avatar" style="background:#c89666;">DJ</div>
+          <div class="doc-name">DR James</div>
+        </div>
+        <div class="doc-header">
+          <div class="doc-avatar" style="background:#4d7c8a;">DL</div>
+          <div class="doc-name">DR Leo</div>
+        </div>
+      </div>
+
+      <div class="doctor-grid">
+        <div class="time-labels-a">
+          <div class="time-label">9:00</div>
+          <div class="time-label">10:00</div>
+          <div class="time-label">11:00</div>
+          <div class="time-label">12:00</div>
+        </div>
+
+        <!-- DR1 Column — Unified Card -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <div
+            style="position:absolute; top:2px; left:3px; right:3px; height:175px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg, #00abb1, #008a8f); box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:2; cursor:pointer; font-size:11px; color:white;">
+            <div
+              style="padding:6px 8px; font-weight:700; font-size:12px; border-bottom:1px solid rgba(255,255,255,0.2);">
+              คุณสมชาย <span style="font-weight:400; font-size:10px; opacity:0.8;">· miraDry</span>
+            </div>
+            <!-- Segments inside -->
+            <div style="padding:3px 8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px;">09:00-09:30</span>
+              <span
+                style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">CONSULT</span>
+              <span style="background:#ef4444; padding:1px 4px; border-radius:4px; font-size:8px;">BUSY</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px; color:#166534;">09:30-10:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">PREP</span>
+              <span
+                style="background:#22c55e; color:white; padding:1px 4px; border-radius:4px; font-size:8px;">FREE</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px;">10:00-10:30</span>
+              <span
+                style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">TREATMENT</span>
+              <span style="background:#ef4444; padding:1px 4px; border-radius:4px; font-size:8px;">BUSY</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px; color:#166534;">10:30-12:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">MACHINE</span>
+              <span
+                style="background:#22c55e; color:white; padding:1px 4px; border-radius:4px; font-size:8px;">FREE</span>
+            </div>
+            <div style="padding:4px 8px; font-size:9px; opacity:0.7;">🏥 TR4 · ⚙️ miraDry</div>
+          </div>
+        </div>
+
+        <!-- DR James Column — Unified Card -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <div
+            style="position:absolute; top:2px; left:3px; right:3px; height:175px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg, #c89666, #a67f4a); box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:2; cursor:pointer; font-size:11px; color:white;">
+            <div
+              style="padding:6px 8px; font-weight:700; font-size:12px; border-bottom:1px solid rgba(255,255,255,0.2);">
+              คุณวิภา <span style="font-weight:400; font-size:10px; opacity:0.8;">· miraDry2</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px;">09:00-09:30</span>
+              <span
+                style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">CONSULT</span>
+              <span style="background:#ef4444; padding:1px 4px; border-radius:4px; font-size:8px;">BUSY</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px; color:#166534;">09:30-10:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">PREP</span>
+              <span
+                style="background:#22c55e; color:white; padding:1px 4px; border-radius:4px; font-size:8px;">FREE</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px;">10:00-10:30</span>
+              <span
+                style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">TREATMENT</span>
+              <span style="background:#ef4444; padding:1px 4px; border-radius:4px; font-size:8px;">BUSY</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px; color:#166534;">10:30-12:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">MACHINE</span>
+              <span
+                style="background:#22c55e; color:white; padding:1px 4px; border-radius:4px; font-size:8px;">FREE</span>
+            </div>
+            <div style="padding:4px 8px; font-size:9px; opacity:0.7;">🏥 TR3 · ⚙️ miraDry2</div>
+          </div>
+        </div>
+
+        <!-- DR Leo Column — Unified Card (Ulthera 2-stage) -->
+        <div class="doc-column">
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+          <div class="doc-grid-row"></div>
+
+          <div
+            style="position:absolute; top:2px; left:3px; right:3px; height:155px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg, #4d7c8a, #3a6070); box-shadow:0 2px 8px rgba(0,0,0,0.15); z-index:2; cursor:pointer; font-size:11px; color:white;">
+            <div
+              style="padding:6px 8px; font-weight:700; font-size:12px; border-bottom:1px solid rgba(255,255,255,0.2);">
+              คุณนภา <span style="font-weight:400; font-size:10px; opacity:0.8;">· Ulthera 300-400 lines</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px; color:#166534;">09:00-10:00</span>
+              <span
+                style="background:#dcfce7; color:#166534; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">PREP</span>
+              <span
+                style="background:#22c55e; color:white; padding:1px 4px; border-radius:4px; font-size:8px;">FREE</span>
+            </div>
+            <div style="padding:3px 8px; background:rgba(0,0,0,0.1); display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-size:10px;">10:00-11:00</span>
+              <span
+                style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700;">TREATMENT</span>
+              <span style="background:#ef4444; padding:1px 4px; border-radius:4px; font-size:8px;">BUSY</span>
+            </div>
+            <div style="padding:4px 8px; font-size:9px; opacity:0.7;">🏥 TR2 · ⚙️ Ulthera</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:16px; background:#e0f7fa; border-radius:8px; font-size:13px; color:#006064;">
+      💡 <strong>Key Insight:</strong> ดีที่สุดสำหรับแพทย์ — เห็น column ตัวเอง + 1 card = 1 appointment + BUSY/FREE
+      ชัดเจน — แต่งานเยอะที่สุด
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- COMPARISON TABLE                             -->
+  <!-- ============================================ -->
+  <div id="compare" class="section">
+    <div class="section-header">
+      <h2>📊 เปรียบเทียบทุก Option</h2>
+      <p>เลือก option ที่เหมาะกับความต้องการและ effort ที่ยอมรับได้</p>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>เกณฑ์</th>
+          <th>ปัจจุบัน</th>
+          <th>A: Doctor Timeline</th>
+          <th>B: Unified Card</th>
+          <th>C: Busy Indicator</th>
+          <th>D: A + B</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>แพทย์รู้ว่าต้องเข้าเมื่อไหร่</strong></td>
+          <td class="cross">❌ ต้องตีความ</td>
+          <td class="check">✅ ดีมาก</td>
+          <td class="check">✅ ดี</td>
+          <td class="partial">⚠️ พอใช้</td>
+          <td class="check">✅✅ ดีที่สุด</td>
+        </tr>
+        <tr>
+          <td><strong>ชื่อผู้ป่วยเด่นชัด</strong></td>
+          <td class="cross">❌ ไม่มี</td>
+          <td class="check">✅ มี</td>
+          <td class="check">✅ เด่นมาก</td>
+          <td class="check">✅ มี</td>
+          <td class="check">✅ เด่นมาก</td>
+        </tr>
+        <tr>
+          <td><strong>1 appointment = 1 visual</strong></td>
+          <td class="cross">❌ แยก segments</td>
+          <td class="partial">⚠️ แยกตาม busy/free</td>
+          <td class="check">✅ card เดียว</td>
+          <td class="cross">❌ ยังแยก</td>
+          <td class="check">✅ card เดียว</td>
+        </tr>
+        <tr>
+          <td><strong>จัดกลุ่มตามหมอ</strong></td>
+          <td class="cross">❌</td>
+          <td class="check">✅</td>
+          <td class="cross">❌</td>
+          <td class="cross">❌</td>
+          <td class="check">✅</td>
+        </tr>
+        <tr>
+          <td><strong>BUSY/FREE ชัดเจน</strong></td>
+          <td class="cross">❌</td>
+          <td class="check">✅ สีเข้ม/จาง</td>
+          <td class="check">✅ แถบใน card</td>
+          <td class="check">✅ แถบสีข้าง</td>
+          <td class="check">✅✅ ทั้งสองแบบ</td>
+        </tr>
+        <tr>
+          <td><strong>Drag & Drop</strong></td>
+          <td class="check">✅</td>
+          <td class="partial">⚠️ ต้อง redesign</td>
+          <td class="check">✅ ใช้ได้</td>
+          <td class="check">✅ เหมือนเดิม</td>
+          <td class="partial">⚠️ ต้อง redesign</td>
+        </tr>
+        <tr>
+          <td><strong>ความยากในการ implement</strong></td>
+          <td>—</td>
+          <td class="cross">🔴 สูง (view ใหม่)</td>
+          <td class="partial">🟡 กลาง (ปรับ render)</td>
+          <td class="check">🟢 ต่ำ (เพิ่ม strip)</td>
+          <td class="cross">🔴🔴 สูงมาก</td>
+        </tr>
+        <tr>
+          <td><strong>เวลาโดยประมาณ</strong></td>
+          <td>—</td>
+          <td>4-6 ชม.</td>
+          <td>2-3 ชม.</td>
+          <td>1-2 ชม.</td>
+          <td>6-8 ชม.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div
+      style="margin-top:24px; padding:20px; background:linear-gradient(135deg, #002b38, #00abb1); border-radius:12px; color:white;">
+      <h3 style="margin-bottom:8px;">🏆 คำแนะนำ</h3>
+      <p style="font-size:14px; line-height:1.6;">
+        <strong>ถ้าต้องการผลลัพธ์ดีที่สุดสำหรับแพทย์:</strong> เลือก <strong>Option B (Unified Card)</strong> ก่อน เพราะ
+        implement ได้เร็ว ได้ผลดี แล้วค่อยเพิ่ม <strong>Option A (Doctor Timeline)</strong> เป็น view เสริมทีหลัง
+        <br><br>
+        <strong>ถ้าต้องการแก้ไขน้อยที่สุด:</strong> เลือก <strong>Option C (Busy Indicator)</strong>
+        <br><br>
+        <strong>ถ้าต้องการ all-in-one:</strong> เลือก <strong>Option D</strong> แต่ใช้เวลามากที่สุด
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+
+</body>
+
+</html>

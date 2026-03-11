@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>Calendar - Apichai</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#002a3a" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/assets/logo.svg" />
+
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00bfa5",
+                        "primary-dark": "#008f7a",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937",
+                        "sidebar-dark": "#002a3a",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "accent-red": "#EF4444",
+                    },
+                    fontFamily: {
+                        display: ["Sarabun", "sans-serif"],
+                        body: ["Sarabun", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'card': '0 2px 8px -2px rgba(0, 0, 0, 0.1)',
+                        'glow': '0 0 20px rgba(0, 191, 165, 0.3)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        /* Ensure draggable elements work properly */
+        .booking-card {
+            -webkit-user-drag: element;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .booking-card * {
+            pointer-events: none;
+        }
+
+        /* Drop zone styling */
+        .drop-zone {
+            transition: all 0.2s ease;
+        }
+
+        .drop-zone.pointer-events-auto {
+            cursor: copy;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 antialiased">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-sidebar-dark text-white shadow-sm">
+        <div class="h-14 flex items-center justify-between px-4 w-full">
+            <div class="flex items-center gap-3">
+                <img src="../assets/logo.svg" alt="Apichai"
+                    class="w-10 h-10 rounded-xl object-cover ring-2 ring-white/40" />
+                <div class="flex flex-col">
+                    <span class="font-bold text-base leading-none tracking-wide">ปฏิทินนัดหมาย</span>
+                    <span class="text-[10px] text-primary/80 uppercase tracking-wider font-semibold">Apichai</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleProfileMenu()" id="profileBtn"
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-white/10 hover:ring-4 hover:ring-white/20 transition">
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden pt-14 pb-20">
+
+        <!-- Calendar Header -->
+        <div
+            class="bg-surface-light dark:bg-surface-dark shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-10 sticky top-0 pb-6 pt-2 rounded-b-[24px]">
+
+            <!-- Month/Year Selector -->
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="showMonthPicker()">
+                    <span id="currentMonthYear"
+                        class="text-xl font-semibold text-gray-800 dark:text-gray-100 tracking-tight group-hover:text-primary transition-colors">
+                        มกราคม 2026
+                    </span>
+                    <span
+                        class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">expand_more</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="goToToday()"
+                        class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-50 dark:hover:bg-white/5 text-gray-400 dark:text-gray-400 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">today</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Day Names -->
+            <div class="grid grid-cols-7 text-center px-4 mb-3">
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">อา</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">จ</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">อ</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">พ</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">พฤ</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">ศ</div>
+                <div class="text-[11px] text-gray-400 font-light tracking-wider uppercase">ส</div>
+            </div>
+
+            <!-- Calendar Days -->
+            <div id="calendarDays" class="grid grid-cols-7 text-center px-4">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Time Slots -->
+        <div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative hide-scrollbar pt-3"
+            id="timeSlotsContainer">
+
+
+
+            <!-- Time Slots will be populated by JavaScript -->
+            <div id="timeSlots">
+                <!-- Loading -->
+                <div class="flex items-center justify-center py-20">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Add Button -->
+        <button onclick="openCreateBookingModal()"
+            class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-glow flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-30 group">
+            <span
+                class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+        </button>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 py-2 px-4 flex justify-between items-center z-40 text-[10px] pb-safe">
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="users.html">
+            <span class="material-symbols-outlined text-2xl">group</span>
+            <span class="font-medium">รายชื่อ</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-primary" href="booking-calendar.html">
+            <span class="material-symbols-outlined text-2xl">calendar_month</span>
+            <span class="font-medium">นัดหมาย</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition relative -mt-6"
+            href="dashboard.html">
+            <div
+                class="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-lg flex items-center justify-center mb-1 ring-4 ring-white dark:ring-gray-800">
+                <span class="material-symbols-outlined text-white text-2xl">dashboard</span>
+            </div>
+            <span class="font-medium text-gray-400 dark:text-gray-500">ภาพรวม</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="rooms.html">
+            <span class="material-symbols-outlined text-2xl">meeting_room</span>
+            <span class="font-medium">ห้อง</span>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-primary transition"
+            href="machines.html">
+            <span class="material-symbols-outlined text-2xl">medical_services</span>
+            <span class="font-medium">เครื่องมือ</span>
+        </a>
+    </nav>
+
+    <!-- Booking Detail Modal -->
+    <div id="bookingDetailModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end justify-center">
+        <div class="bg-white dark:bg-card-dark w-full max-w-2xl rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div
+                class="sticky top-0 bg-white dark:bg-card-dark border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">รายละเอียดการจอง</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">ข้อมูลการจองห้องและหัตถกรรม</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="modalStatus" class="px-3 py-1 rounded-full text-xs font-medium">-</span>
+                        <button onclick="closeBookingDetail()"
+                            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+                            <span class="material-symbols-outlined text-gray-500 dark:text-gray-400">close</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Booker Info with Avatar -->
+                <div class="space-y-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">ผู้จอง</label>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div id="modalBookerAvatar"
+                            class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-semibold flex-shrink-0">
+                            A</div>
+                        <div class="flex-1">
+                            <p id="modalBookerName" class="text-base font-bold text-gray-900 dark:text-white">-</p>
+                            <p id="modalBookerRole" class="text-xs text-gray-600 dark:text-gray-400 mt-1">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Info -->
+                <div class="space-y-2">
+                    <label class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">ชื่อผู้ป่วย</label>
+                    <div
+                        class="p-3 bg-gradient-to-br from-primary/5 to-primary-dark/5 border border-primary/10 rounded-xl">
+                        <p id="modalPatientName" class="text-sm font-bold text-gray-900 dark:text-white">-</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">ผู้ป่วย</p>
+                    </div>
+                </div>
+
+                <!-- Doctor and Machine - Read Only -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Doctor -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">stethoscope</span>
+                            แพทย์ผู้รักษา
+                        </label>
+                        <div
+                            class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <p id="modalDoctor" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Machine -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">medical_services</span>
+                            หัตถกรรม
+                        </label>
+                        <div
+                            class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <p id="modalMachine" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Room and Date -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Room -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">meeting_room</span>
+                            ห้อง
+                        </label>
+                        <div
+                            class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <p id="modalRoom" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            วันที่
+                        </label>
+                        <div
+                            class="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <p id="modalDate" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time -->
+                <div class="space-y-2">
+                    <label
+                        class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">schedule</span>
+                        เวลา
+                    </label>
+                    <div
+                        class="p-4 bg-gradient-to-r from-primary/10 to-primary-dark/10 rounded-xl border border-primary/20">
+                        <p id="modalTime" class="text-base font-bold text-gray-900 dark:text-white text-center">-</p>
+                    </div>
+                </div>
+
+                <!-- Doctor Time -->
+                <div class="space-y-2">
+                    <label
+                        class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">group</span>
+                        เวลาหมอ
+                    </label>
+                    <div
+                        class="p-4 bg-[#e8d8a1]/20 border-l-4 border-[#e8d8a1] rounded-lg">
+                        <p id="modalDoctorTime" class="text-base font-bold text-gray-900 dark:text-white text-center">-</p>
+                    </div>
+                </div>
+
+                <!-- Prep and Cleanup Time -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">schedule</span>
+                            เวลาเตรียมเครื่อง
+                        </label>
+                        <div
+                            class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                            <p id="modalPrepTime" class="text-sm font-medium text-blue-700 dark:text-blue-300">-</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label
+                            class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[14px]">cleaning_services</span>
+                            เวลาเก็บเครื่อง
+                        </label>
+                        <div
+                            class="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
+                            <p id="modalCleanupTime" class="text-sm font-medium text-orange-700 dark:text-orange-300">-
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="space-y-2">
+                    <label
+                        class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">description</span>
+                        รายละเอียดเพิ่มเติม
+                    </label>
+                    <div
+                        class="p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl min-h-[80px]">
+                        <p id="modalNotes" class="text-sm text-gray-700 dark:text-gray-300">-</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="modalActions" class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button onclick="editBooking()"
+                        class="flex-1 px-4 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">edit</span>
+                        แก้ไข
+                    </button>
+                    <button onclick="cancelBooking()"
+                        class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">cancel</span>
+                        ยกเลิกการจอง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Menu -->
+    <div id="profileMenu" class="hidden fixed top-16 right-4 z-[60] w-64">
+        <div
+            class="bg-white dark:bg-card-dark rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div
+                class="p-4 bg-gradient-to-br from-primary/10 to-primary-dark/10 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                    </div>
+                    <div class="flex-1">
+                        <p id="profileName" class="font-semibold text-gray-900 dark:text-white text-sm">User</p>
+                        <p id="profileEmail" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="py-2">
+                <button onclick="handleLogout()"
+                    class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">logout</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">ออกจากระบบ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8787'
+            : window.location.hostname.match(/^192\.168\.\d+\.\d+$/) || window.location.hostname.match(/^10\.\d+\.\d+\.\d+$/)
+            ? `http://${window.location.hostname}:8787`
+            : window.location.hostname.includes('qa.')
+                ? 'https://beauty-clinic-api-qa.apichais-leo01.workers.dev'
+                : 'https://beauty-clinic-api.apichais-leo01.workers.dev';
+
+        // State
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let allBookings = [];
+        let draggedBookingId = null;
+        const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+        // Auth check
+        function checkAuth() {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return null;
+            }
+            return token;
+        }
+
+        // API call helper
+        async function apiCall(endpoint, options = {}) {
+            const token = checkAuth();
+            if (!token) return null;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        sessionStorage.removeItem('token');
+                        sessionStorage.removeItem('user');
+                        window.location.href = '/';
+                        return null;
+                    }
+                    throw new Error(responseData.error || responseData.message || `HTTP ${response.status}`);
+                }
+
+                return responseData;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Profile menu
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const profileBtn = document.getElementById('profileBtn');
+            if (!menu.contains(e.target) && !profileBtn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        async function handleLogout() {
+            document.getElementById('profileMenu').classList.add('hidden');
+            const confirmed = await showConfirmDialog(
+                'ออกจากระบบ',
+                'คุณต้องการออกจากระบบใช่หรือไม่?'
+            );
+
+            if (confirmed) {
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('google_calendar_token');
+                sessionStorage.removeItem('google_calendar_refresh_token');
+                window.location.href = '/';
+            }
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+                if (user.name) {
+                    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+                    const profileBtn = document.getElementById('profileBtn');
+                    if (profileBtn) {
+                        profileBtn.textContent = initials;
+                    }
+
+                    const profileName = document.getElementById('profileName');
+                    const profileEmail = document.getElementById('profileEmail');
+                    if (profileName) profileName.textContent = user.name || 'User';
+                    if (profileEmail) profileEmail.textContent = user.email || '';
+
+                    const profileAvatar = document.querySelector('#profileMenu .w-12.h-12');
+                    if (profileAvatar) {
+                        profileAvatar.textContent = initials;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Update month/year display
+            document.getElementById('currentMonthYear').textContent = `${thaiMonths[month]} ${year + 543}`;
+
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Previous month days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayEl = createDayElement(day, true, false);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // Current month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                date.setHours(0, 0, 0, 0);
+                const isToday = date.getTime() === today.getTime();
+                const isSelected = date.getTime() === selectedDate.getTime();
+                const dayEl = createDayElement(day, false, isToday, isSelected, date);
+                calendarDays.appendChild(dayEl);
+            }
+
+            // Next month days
+            const totalCells = calendarDays.children.length;
+            const remainingCells = 35 - totalCells; // 5 weeks
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = createDayElement(day, true, false);
+                calendarDays.appendChild(dayEl);
+            }
+        }
+
+        function createDayElement(day, isOtherMonth, isToday, isSelected, date) {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-center justify-center py-1 relative cursor-pointer';
+
+            if (isOtherMonth) {
+                div.className += ' opacity-50';
+            }
+
+            if (isSelected) {
+                div.innerHTML = `
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-glow text-white font-medium text-sm relative z-10 transition-transform hover:scale-105">
+                        ${day}
+                    </div>
+                `;
+            } else if (isToday) {
+                div.innerHTML = `
+                    <div class="w-10 h-10 border-2 border-primary rounded-full flex items-center justify-center text-primary font-medium text-sm transition-transform hover:scale-105">
+                        ${day}
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `<span class="text-sm font-normal text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">${day}</span>`;
+            }
+
+            if (!isOtherMonth && date) {
+                div.onclick = () => selectDate(date);
+            }
+
+            return div;
+        }
+
+        function selectDate(date) {
+            selectedDate = new Date(date);
+            selectedDate.setHours(0, 0, 0, 0);
+            console.log('Selected date:', selectedDate.toISOString().split('T')[0]);
+            renderCalendar();
+            loadBookingsForDate(selectedDate);
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            selectedDate = new Date();
+            renderCalendar();
+            loadBookingsForDate(selectedDate);
+        }
+
+        let pickerYear = new Date().getFullYear();
+
+        function showMonthPicker() {
+            const modal = document.getElementById('monthPickerModal');
+            const yearSelect = document.getElementById('pickerYearSelect');
+
+            pickerYear = currentDate.getFullYear();
+
+            // Populate year select (current year - 5 to +10)
+            yearSelect.innerHTML = '';
+            for (let y = pickerYear - 5; y <= pickerYear + 10; y++) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = `พ.ศ. ${y + 543}`;
+                if (y === pickerYear) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+
+            renderPickerMonths();
+            modal.classList.remove('hidden');
+        }
+
+        function closeMonthPicker() {
+            document.getElementById('monthPickerModal').classList.add('hidden');
+        }
+
+        function changePickerYear(year) {
+            pickerYear = parseInt(year);
+            renderPickerMonths();
+        }
+
+        function renderPickerMonths() {
+            const container = document.getElementById('monthsGrid');
+            container.innerHTML = '';
+
+            const currentMonth = currentDate.getMonth();
+            const isCurrentYear = pickerYear === currentDate.getFullYear();
+
+            thaiMonths.forEach((month, index) => {
+                const isSelected = isCurrentYear && index === currentMonth;
+                const div = document.createElement('div');
+                div.className = `p-4 text-center rounded-xl cursor-pointer transition-all ${isSelected
+                    ? 'bg-primary text-white shadow-glow font-bold scale-105'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary'
+                    }`;
+                div.textContent = month;
+                div.onclick = () => selectMonth(index);
+                container.appendChild(div);
+            });
+        }
+
+        function selectMonth(monthIndex) {
+            currentDate = new Date(pickerYear, monthIndex, 1);
+            // If the selected month is the same as the month of the currently selected date, keep the day.
+            // Otherwise, set the selected date to the 1st of that month.
+            if (selectedDate.getMonth() === monthIndex && selectedDate.getFullYear() === pickerYear) {
+                // Keep selectedDate
+            } else {
+                selectedDate = new Date(pickerYear, monthIndex, 1);
+            }
+
+            renderCalendar();
+            loadBookingsForDate(selectedDate);
+            closeMonthPicker();
+        }
+
+        // Load bookings for selected date
+        async function loadBookingsForDate(date) {
+            try {
+                // Use local date to avoid timezone issues
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+                console.log('Loading bookings for date:', dateStr);
+                const bookingsData = await apiCall(`/api/bookings/date/${dateStr}`);
+                allBookings = bookingsData?.filter(b => b.status !== 'CANCELLED') || [];
+                console.log('Loaded bookings:', allBookings.length, 'events');
+
+                renderTimeSlots();
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                // Show empty calendar on error
+                allBookings = [];
+                renderTimeSlots();
+            }
+        }
+
+        // Drag and Drop Handlers
+        let isDragging = false;
+
+        function handleDragStart(event, bookingId) {
+            console.log('Drag started:', bookingId);
+            isDragging = true;
+            draggedBookingId = bookingId;
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData('text/plain', bookingId); // Required for Firefox
+            
+            // Make slightly transparent
+            if (event.target) {
+                event.target.style.opacity = "0.5";
+                event.target.style.cursor = "grabbing";
+            }
+            
+            // Show all time labels and separators
+            document.querySelectorAll('.time-label-hidden').forEach(el => {
+                el.classList.remove('opacity-0');
+                el.classList.add('opacity-100');
+            });
+            document.querySelectorAll('.separator-hidden').forEach(el => {
+                el.classList.remove('opacity-0');
+                el.classList.add('opacity-30');
+            });
+            
+            // Enable pointer events on drop zones and raise z-index
+            document.querySelectorAll('.drop-zone').forEach(el => {
+                el.classList.remove('pointer-events-none', 'z-0');
+                el.classList.add('pointer-events-auto', 'z-30');
+            });
+            
+            console.log('Drop zones enabled:', document.querySelectorAll('.drop-zone.pointer-events-auto').length);
+        }
+
+        function handleDragEnd(event) {
+            console.log('Drag ended');
+            isDragging = false;
+            draggedBookingId = null;
+            if (event.target) {
+                event.target.style.opacity = "1";
+                event.target.style.cursor = "move";
+            }
+            
+            // Hide time labels and separators again
+            document.querySelectorAll('.time-label-hidden').forEach(el => {
+                el.classList.remove('opacity-100');
+                el.classList.add('opacity-0');
+            });
+            document.querySelectorAll('.separator-hidden').forEach(el => {
+                el.classList.remove('opacity-30');
+                el.classList.add('opacity-0');
+            });
+            
+            // Lower drop zones back down and disable pointer events
+            document.querySelectorAll('.drop-zone').forEach(el => {
+                el.classList.remove('z-30', 'pointer-events-auto');
+                el.classList.add('z-0', 'pointer-events-none');
+            });
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.dataTransfer.dropEffect = "move";
+            
+            // Highlight the drop target with stronger color
+            const dropTarget = event.currentTarget;
+            if (dropTarget && !dropTarget.classList.contains('bg-primary/20')) {
+                dropTarget.classList.add('bg-primary/20', 'ring-2', 'ring-primary/40');
+                console.log('Highlighting drop zone:', dropTarget.getAttribute('data-time'));
+            }
+        }
+
+        function handleDragLeave(event) {
+            const dropTarget = event.currentTarget;
+            if (dropTarget) {
+                dropTarget.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40');
+            }
+        }
+
+        async function handleDrop(event, targetHour, targetMinute = 0) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('Drop detected at:', targetHour, ':', targetMinute);
+            
+            // Remove highlight
+            if (event.currentTarget) {
+                event.currentTarget.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40');
+            }
+
+            if (!draggedBookingId) {
+                console.log('No booking ID found');
+                return;
+            }
+
+            const booking = allBookings.find(b => b.id === draggedBookingId);
+            if (!booking) return;
+
+            const [originalStartH, originalStartM] = booking.start_time.split(':').map(Number);
+            const originalStartMinutes = originalStartH * 60 + originalStartM;
+            const newStartMinutes = targetHour * 60 + targetMinute;
+
+            // If dropped on the same time slot, do nothing
+            if (originalStartMinutes === newStartMinutes) return;
+
+            // Calculate duration
+            const [endH, endM] = booking.end_time.split(':').map(Number);
+            const endMinutes = endH * 60 + endM;
+            const durationMinutes = endMinutes - originalStartMinutes;
+
+            // Calculate new end time
+            const totalNewEndMinutes = newStartMinutes + durationMinutes;
+            const newEndHour = Math.floor(totalNewEndMinutes / 60);
+            const newEndMin = totalNewEndMinutes % 60;
+
+            // Validate new time is within working hours (8:00-21:00)
+            if (newStartMinutes < 8 * 60 || totalNewEndMinutes > 21 * 60) {
+                showNotification('เวลาไม่ถูกต้อง', 'นัดหมายต้องอยู่ในช่วงเวลา 08:00-21:00', 'error');
+                return;
+            }
+
+            // Check for conflicts with other bookings
+            const hasConflict = allBookings.some(otherBooking => {
+                // Skip the booking being moved
+                if (otherBooking.id === booking.id) return false;
+                
+                // Skip cancelled bookings
+                if (otherBooking.status === 'CANCELLED') return false;
+
+                // Parse other booking times
+                const [otherStartH, otherStartM] = otherBooking.start_time.split(':').map(Number);
+                const [otherEndH, otherEndM] = otherBooking.end_time.split(':').map(Number);
+                const otherStartMinutes = otherStartH * 60 + otherStartM;
+                const otherEndMinutes = otherEndH * 60 + otherEndM;
+
+                // Check for time overlap
+                const timeOverlap = (newStartMinutes < otherEndMinutes && totalNewEndMinutes > otherStartMinutes);
+                
+                if (!timeOverlap) return false;
+
+                // Check for resource conflicts
+                const sameRoom = booking.room_id && otherBooking.room_id === booking.room_id;
+                const sameMachine = booking.machine_id && otherBooking.machine_id === booking.machine_id;
+                const sameDoctor = booking.doctor_id && otherBooking.doctor_id === booking.doctor_id;
+
+                return sameRoom || sameMachine || sameDoctor;
+            });
+
+            if (hasConflict) {
+                showNotification(
+                    'ไม่สามารถย้ายได้', 
+                    'มีการจองที่ทับซ้อนกับห้อง เครื่องมือ หรือแพทย์ในช่วงเวลานี้', 
+                    'error'
+                );
+                return;
+            }
+
+            const newStartTimeStr = `${targetHour.toString().padStart(2, '0')}:${targetMinute.toString().padStart(2, '0')}`;
+            const newEndTimeStr = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+
+            try {
+                const updateData = {
+                    date: booking.date.split('T')[0],
+                    start_time: newStartTimeStr + ':00',
+                    end_time: newEndTimeStr + ':00',
+                    status: booking.status,
+                    notes: booking.notes,
+                    patient_name: booking.patient_name
+                };
+
+                showLoading();
+
+                const response = await apiCall(`/api/bookings/${booking.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData)
+                });
+
+                console.log('📋 Update response:', response);
+
+                // Update Google Calendar event if exists
+                const googleToken = sessionStorage.getItem('google_calendar_token');
+                const googleEventId = response.google_event_id || booking.google_event_id;
+
+                if (googleToken && googleEventId) {
+                    try {
+                        console.log('📅 Updating Google Calendar event:', googleEventId);
+
+                        // Format datetime for Google Calendar
+                        const dateStr = booking.date.split('T')[0];
+                        const startDateTime = `${dateStr}T${newStartTimeStr}:00`;
+                        const endDateTime = `${dateStr}T${newEndTimeStr}:00`;
+
+                        const updateResponse = await fetch(`${API_URL}/api/calendar/events/${googleEventId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${googleToken}`,
+                                'Origin': window.location.origin,
+                            },
+                            body: JSON.stringify({
+                                booking_id: booking.id,
+                                title: `นัดหมาย: ${booking.patient_name}`,
+                                patient_name: booking.patient_name,
+                                doctor_name: booking.doctors?.name,
+                                treatment: booking.machines?.name,
+                                room_name: booking.rooms?.name,
+                                prep_time: booking.machines?.prep_time_minutes,
+                                cleanup_time: booking.machines?.cleanup_time_minutes,
+                                start_time: startDateTime,
+                                end_time: endDateTime,
+                                notes: booking.notes
+                            })
+                        });
+
+                        if (updateResponse.ok) {
+                            console.log('✅ Updated Google Calendar event successfully');
+                        } else {
+                            const error = await updateResponse.json().catch(() => ({ error: 'Unknown error' }));
+                            console.warn('⚠️ Failed to update Google Calendar event:', error);
+                        }
+                    } catch (calError) {
+                        console.warn('⚠️ Failed to update Google Calendar event:', calError.message);
+                        // Don't throw error, we already updated the booking successfully
+                    }
+                } else {
+                    console.log('ℹ️ Skip Google Calendar update:', {
+                        hasToken: !!googleToken,
+                        hasEventId: !!googleEventId
+                    });
+                }
+
+                await loadBookingsForDate(selectedDate);
+                hideLoading();
+                showNotification('สำเร็จ', `ย้ายนัดหมายไป ${newStartTimeStr} เรียบร้อยแล้ว`, 'success');
+
+            } catch (error) {
+                console.error('Error moving booking:', error);
+                hideLoading();
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถย้ายนัดหมายได้: ' + error.message, 'error');
+            }
+        }
+
+        // Calculate overlapping events layout (Google Calendar style)
+        function calculateEventLayout(bookings) {
+            if (bookings.length === 0) return [];
+
+            // Sort by start time, then by duration (longer first)
+            const sorted = [...bookings].sort((a, b) => {
+                const aStart = a.start_time.localeCompare(b.start_time);
+                if (aStart !== 0) return aStart;
+                const aDuration = a.end_time.localeCompare(a.start_time);
+                const bDuration = b.end_time.localeCompare(b.start_time);
+                return bDuration - aDuration;
+            });
+
+            // Assign columns to events
+            const columns = [];
+            const eventLayouts = [];
+
+            sorted.forEach(booking => {
+                // Find first available column
+                let columnIndex = 0;
+                while (columnIndex < columns.length) {
+                    const column = columns[columnIndex];
+                    const hasOverlap = column.some(existingBooking => {
+                        return !(booking.start_time >= existingBooking.end_time ||
+                            booking.end_time <= existingBooking.start_time);
+                    });
+                    if (!hasOverlap) break;
+                    columnIndex++;
+                }
+
+                // Create new column if needed
+                if (columnIndex === columns.length) {
+                    columns.push([]);
+                }
+                columns[columnIndex].push(booking);
+
+                // Calculate width and position
+                const totalColumns = columns.length;
+                eventLayouts.push({
+                    booking,
+                    column: columnIndex,
+                    totalColumns
+                });
+            });
+
+            // Update total columns for all events
+            const maxColumns = columns.length;
+            eventLayouts.forEach(layout => {
+                layout.totalColumns = maxColumns;
+            });
+
+            return eventLayouts;
+        }
+
+        // Render time slots
+        function renderTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
+
+            let html = '';
+
+            hours.forEach((hour, index) => {
+                const hourBookings = allBookings.filter(b => {
+                    const startHour = parseInt(b.start_time.split(':')[0]);
+                    return startHour === hour;
+                });
+
+                html += `
+                    <div class="flex h-32 relative group">
+                        <div class="w-[70px] text-right pr-4 pt-0">
+                            <span class="text-xs text-gray-400 font-light -translate-y-1/2 block">${hour.toString().padStart(2, '0')}:00</span>
+                        </div>
+                `;
+
+                // Calculate drop target class
+                let dropTargetClass = 'flex-1 border-t border-dashed border-gray-200 dark:border-gray-800 relative pr-6 transition-colors duration-200';
+
+                html += `<div class="${dropTargetClass}">`;
+
+                // Create 4 equal drop zones for 15-minute intervals (each 25% of hour height)
+                const intervals = [0, 15, 30, 45];
+                const slotHeight = 32; // 128px / 4 = 32px per slot
+                
+                intervals.forEach((minute, idx) => {
+                    const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    
+                    html += `
+                        <div class="drop-zone absolute left-0 right-6 group/dropzone z-0 pointer-events-none" 
+                             style="top: ${idx * slotHeight}px; height: ${slotHeight}px;"
+                             ondragover="allowDrop(event)"
+                             ondragleave="handleDragLeave(event)"
+                             ondrop="handleDrop(event, ${hour}, ${minute})"
+                             data-time="${timeSlot}">
+                            <!-- Separator line (hidden by default, shows on drag) -->
+                            ${idx > 0 ? `<div class="separator-hidden absolute top-0 left-0 right-0 border-t border-dashed border-gray-200 dark:border-gray-700 opacity-0 transition-opacity duration-300"></div>` : ''}
+                            
+                            <!-- Time label (hidden by default, shows on drag) -->
+                            <div class="time-label-hidden absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-all duration-300">
+                                    <span class="text-[9px] font-medium text-gray-400 dark:text-gray-500 group-hover/dropzone:text-primary group-hover/dropzone:font-semibold">
+                                        ${timeSlot}
+                                    </span>
+                                </div>
+                                
+                                <!-- Enhanced highlight on hover during drag -->
+                                <div class="absolute inset-0 opacity-0 group-hover/dropzone:opacity-100 transition-opacity pointer-events-none">
+                                    <div class="absolute right-2 top-1/2 -translate-y-1/2">
+                                        <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/30">
+                                            วางที่นี่
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                if (hourBookings.length > 0) {
+                    const colors = ['primary', 'blue-500', 'purple-500', 'pink-500', 'orange-500'];
+
+                    // Calculate flexible layout for overlapping events
+                    const layouts = calculateEventLayout(hourBookings);
+
+                    layouts.forEach((layout, idx) => {
+                        const { booking, column, totalColumns } = layout;
+                        const color = colors[idx % colors.length];
+                        const statusColor = booking.status === 'CANCELLED' ? 'red' : 'green';
+                        const statusText = booking.status === 'CANCELLED' ? 'ยกเลิก' : 'ยืนยัน';
+                        const bookingJson = JSON.stringify(booking).replace(/'/g, "&#39;");
+
+                        // Calculate dynamic width and position
+                        const gap = 4; // gap between events in px
+                        const availableWidth = 100; // percentage
+                        const columnWidth = (availableWidth - (gap * (totalColumns - 1) / 10)) / totalColumns;
+                        const leftPosition = column * (columnWidth + (gap / 10));
+
+                        // Adjust content based on width
+                        const isNarrow = totalColumns >= 3;
+                        const height = isNarrow ? 90 : 100;
+                        const padding = isNarrow ? 'p-2' : 'p-4';
+                        const titleSize = isNarrow ? 'text-[11px]' : 'text-sm';
+                        const timeSize = isNarrow ? 'text-[9px]' : 'text-xs';
+                        const badgeSize = isNarrow ? 'text-[8px] px-1 py-0.5' : 'text-[10px] px-2 py-1';
+
+                        // Stronger border colors
+                        const borderColors = {
+                            'primary': 'border-[#00abb1]',
+                            'blue-500': 'border-blue-500',
+                            'purple-500': 'border-purple-500',
+                            'pink-500': 'border-pink-500',
+                            'orange-500': 'border-orange-500'
+                        };
+                        const borderColor = borderColors[color] || 'border-primary';
+
+                        html += `
+                            <div 
+                                draggable="true"
+                                ondragstart="handleDragStart(event, '${booking.id}')"
+                                ondragend="handleDragEnd(event)"
+                                data-booking='${bookingJson}'
+                                style="left: ${leftPosition}%; width: ${columnWidth}%; touch-action: none;"
+                                class="booking-card absolute top-2 h-[${height}px] bg-white dark:bg-surface-dark border-l-4 ${borderColor} rounded-xl ${padding} shadow-md hover:shadow-xl transition-all cursor-move z-10 active:cursor-grabbing ring-1 ring-gray-200 dark:ring-gray-700">
+                                <div class="flex flex-col h-full">
+                                    <div class="flex justify-between items-start mb-1 gap-1">
+                                        <h3 class="${titleSize} font-bold text-gray-900 dark:text-white truncate flex-1 min-w-0">${booking.patient_name}</h3>
+                                        ${!isNarrow ? `
+                                            <span class="bg-${statusColor}-100 dark:bg-${statusColor}-900/30 text-${statusColor}-700 dark:text-${statusColor}-400 ${badgeSize} font-semibold rounded border border-${statusColor}-200 dark:border-${statusColor}-900/40 flex-shrink-0">
+                                                ${statusText}
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    <div class="${timeSize} text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1 ${isNarrow ? 'mb-1' : 'mb-2'}">
+                                        <span class="material-symbols-outlined text-[10px]">schedule</span>
+                                        <span class="truncate font-semibold">${booking.start_time.substring(0, 5)} - ${booking.end_time.substring(0, 5)}</span>
+                                    </div>
+                                    ${!isNarrow ? `
+                                        <div class="mt-auto flex items-center gap-1 flex-wrap">
+                                            <span class="text-[10px] text-${color} font-semibold bg-teal-100 dark:bg-teal-900/30 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800 truncate block">
+                                                ${booking.machines?.name || '-'}
+                                            </span>
+                                        </div>
+                                    ` : `
+                                        <div class="mt-auto">
+                                            <span class="text-[8px] text-${color} font-semibold bg-teal-100 dark:bg-teal-900/30 px-1 py-0.5 rounded border border-teal-200 dark:border-teal-800 truncate block">
+                                                ${booking.machines?.name || '-'}
+                                            </span>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Add bottom padding
+            html += '<div class="h-24"></div>';
+
+            container.innerHTML = html;
+            
+            // Add click handlers after rendering (to avoid conflict with drag)
+            document.querySelectorAll('.booking-card').forEach(card => {
+                let isDraggingCard = false;
+                let dragStartTime = 0;
+                
+                card.addEventListener('mousedown', () => {
+                    isDraggingCard = false;
+                    dragStartTime = Date.now();
+                });
+                
+                card.addEventListener('dragstart', () => {
+                    isDraggingCard = true;
+                });
+                
+                card.addEventListener('click', (e) => {
+                    try {
+                        // Only trigger click if not dragging and quick click
+                        const clickDuration = Date.now() - dragStartTime;
+                        if (!isDraggingCard && clickDuration < 300) {
+                            const bookingData = JSON.parse(card.getAttribute('data-booking'));
+                            if (bookingData) {
+                                showBookingDetail(bookingData);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error showing booking detail:', error);
+                    }
+                });
+            });
+        }
+
+
+
+        let currentBooking = null; // Store current booking for edit/cancel operations
+
+        function showBookingDetail(booking) {
+            // Store booking reference
+            currentBooking = booking;
+
+            // Populate modal with booking data
+            const modal = document.getElementById('bookingDetailModal');
+            
+            // Null check for modal
+            if (!modal) {
+                console.error('Booking detail modal not found');
+                return;
+            }
+
+            // Helper function to safely set element content
+            const setElementContent = (id, content) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = content;
+                } else {
+                    console.warn(`Element with id "${id}" not found`);
+                }
+            };
+
+            // Helper function to safely set element class
+            const setElementClass = (id, className) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = className;
+                } else {
+                    console.warn(`Element with id "${id}" not found`);
+                }
+            };
+
+            // Status
+            const statusEl = document.getElementById('modalStatus');
+            if (statusEl) {
+                const statusColor = booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                    booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-700';
+                const statusText = booking.status === 'CONFIRMED' ? 'ยืนยันแล้ว' :
+                    booking.status === 'CANCELLED' ? 'ยกเลิก' :
+                        'เสร็จสิ้น';
+                statusEl.className = `px-3 py-1 rounded-full text-xs font-medium ${statusColor}`;
+                statusEl.textContent = statusText;
+            }
+
+            // Booker info
+            const bookerName = booking.users?.name || '-';
+            const bookerRole = booking.users?.role || '-';
+            const initials = bookerName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            setElementContent('modalBookerAvatar', initials);
+            setElementContent('modalBookerName', bookerName);
+            setElementContent('modalBookerRole', bookerRole);
+
+            // Patient name
+            setElementContent('modalPatientName', booking.patient_name || '-');
+
+            // Doctor and Machine
+            setElementContent('modalDoctor', booking.doctors?.name || '-');
+            setElementContent('modalMachine', booking.machines?.name || '-');
+
+            // Room and Date
+            setElementContent('modalRoom', booking.rooms?.name || '-');
+            const dateObj = new Date(booking.date);
+            const dateStr = dateObj.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            setElementContent('modalDate', dateStr);
+
+            // Time
+            const timeStr = `${booking.start_time?.substring(0, 5) || '-'} - ${booking.end_time?.substring(0, 5) || '-'}`;
+            setElementContent('modalTime', timeStr);
+
+            // Doctor Time (excluding prep and cleanup)
+            const prepMinutes = booking.machines?.prep_time_minutes || 0;
+            const cleanupMinutes = booking.machines?.cleanup_time_minutes || 0;
+            
+            if (booking.start_time && booking.end_time) {
+                // Parse start and end times
+                const [startHour, startMin] = booking.start_time.split(':').map(Number);
+                const [endHour, endMin] = booking.end_time.split(':').map(Number);
+                
+                // Add prep time to start time
+                const totalStartMinutes = startHour * 60 + startMin + prepMinutes;
+                const doctorStartHour = Math.floor(totalStartMinutes / 60);
+                const doctorStartMin = totalStartMinutes % 60;
+                const doctorStartTime = `${doctorStartHour.toString().padStart(2, '0')}:${doctorStartMin.toString().padStart(2, '0')}`;
+                
+                // Subtract cleanup time from end time
+                const totalEndMinutes = endHour * 60 + endMin - cleanupMinutes;
+                const doctorEndHour = Math.floor(totalEndMinutes / 60);
+                const doctorEndMin = totalEndMinutes % 60;
+                const doctorEndTime = `${doctorEndHour.toString().padStart(2, '0')}:${doctorEndMin.toString().padStart(2, '0')}`;
+                
+                const doctorTimeStr = `${doctorStartTime} - ${doctorEndTime}`;
+                setElementContent('modalDoctorTime', doctorTimeStr);
+            } else {
+                setElementContent('modalDoctorTime', '-');
+            }
+
+            // Prep and Cleanup time
+            setElementContent('modalPrepTime', prepMinutes > 0 ? `${prepMinutes} นาที` : 'ไม่มี');
+            setElementContent('modalCleanupTime', cleanupMinutes > 0 ? `${cleanupMinutes} นาที` : 'ไม่มี');
+
+            // Notes
+            setElementContent('modalNotes', booking.notes || 'ไม่มีรายละเอียดเพิ่มเติม');
+
+            // Show/hide action buttons based on status
+            const actionsDiv = document.getElementById('modalActions');
+            if (actionsDiv) {
+                if (booking.status === 'CANCELLED') {
+                    actionsDiv.classList.add('hidden');
+                } else {
+                    actionsDiv.classList.remove('hidden');
+                }
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+        }
+
+        function closeBookingDetail() {
+            document.getElementById('bookingDetailModal').classList.add('hidden');
+            currentBooking = null;
+        }
+
+        function openCreateBookingModal() {
+            // Redirect to booking form page
+            window.location.href = 'booking.html';
+        }
+
+        // ============================================================================
+        // BOOKING ACTIONS - EDIT & CANCEL
+        // ============================================================================
+
+        async function cancelBooking() {
+            if (!currentBooking) return;
+
+            const confirmed = await showConfirmDialog(
+                'ยกเลิกการจอง',
+                `คุณต้องการยกเลิกการจองของ ${currentBooking.patient_name} ใช่หรือไม่?`
+            );
+
+            if (!confirmed) return;
+
+            try {
+                showLoading();
+
+                // Cancel the booking in the system
+                const response = await apiCall(`/api/bookings/${currentBooking.id}/cancel`, {
+                    method: 'PATCH'
+                });
+
+                console.log('📋 Cancel response:', response);
+
+                // Delete from Google Calendar if event_id exists and user is connected
+                const googleToken = sessionStorage.getItem('google_calendar_token');
+                const googleEventId = response.google_event_id;
+
+                if (googleToken && googleEventId) {
+                    try {
+                        console.log('🗑️ Deleting Google Calendar event:', googleEventId);
+                        
+                        // Call Google Calendar API to delete event
+                        const deleteResponse = await fetch(`${API_URL}/api/calendar/events/${googleEventId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${googleToken}`,
+                                'Origin': window.location.origin,
+                            }
+                        });
+
+                        if (deleteResponse.ok) {
+                            console.log('✅ Deleted Google Calendar event successfully');
+                        } else {
+                            const error = await deleteResponse.json().catch(() => ({ error: 'Unknown error' }));
+                            console.warn('⚠️ Failed to delete Google Calendar event:', error);
+                        }
+                    } catch (calError) {
+                        console.warn('⚠️ Failed to delete Google Calendar event:', calError.message);
+                        // Don't throw error, we already cancelled the booking successfully
+                    }
+                } else {
+                    console.log('ℹ️ Skip Google Calendar deletion:', {
+                        hasToken: !!googleToken,
+                        hasEventId: !!googleEventId
+                    });
+                }
+
+                hideLoading();
+                showNotification('สำเร็จ', 'ยกเลิกการจองเรียบร้อยแล้ว', 'success');
+                closeBookingDetail();
+                // Reset current booking to ensure fresh data on next click
+                currentBooking = null;
+                // Reload bookings with a small delay to ensure modal is fully closed
+                setTimeout(() => {
+                    loadBookingsForDate(selectedDate);
+                }, 300);
+
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                hideLoading();
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถยกเลิกการจองได้: ' + error.message, 'error');
+            }
+        }
+
+        async function editBooking() {
+            if (!currentBooking) return;
+
+            // Convert modal to edit mode
+            const modal = document.getElementById('bookingDetailModal');
+            const modalContent = modal.querySelector('.bg-white');
+
+            // Get current values
+            const patientName = currentBooking.patient_name;
+            const notes = currentBooking.notes || '';
+            const startTime = currentBooking.start_time.substring(0, 5);
+            const endTime = currentBooking.end_time.substring(0, 5);
+
+            // Replace patient name with input
+            const patientEl = document.getElementById('modalPatientName');
+            const patientContainer = patientEl.parentElement;
+            patientContainer.innerHTML = `
+                <input id="editPatientName" type="text" value="${patientName}" 
+                    class="w-full p-3 bg-white dark:bg-gray-800 border border-primary/30 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" 
+                    placeholder="ชื่อผู้ป่วย">
+            `;
+
+            // Replace time with inputs
+            const timeEl = document.getElementById('modalTime');
+            const timeContainer = timeEl.parentElement;
+            timeContainer.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <input id="editStartTime" type="time" value="${startTime}" 
+                        class="flex-1 p-3 bg-white dark:bg-gray-800 border border-primary/30 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <span class="text-gray-500">-</span>
+                    <input id="editEndTime" type="time" value="${endTime}" 
+                        class="flex-1 p-3 bg-white dark:bg-gray-800 border border-primary/30 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            `;
+
+            // Replace notes with textarea
+            const notesEl = document.getElementById('modalNotes');
+            const notesContainer = notesEl.parentElement;
+            notesContainer.innerHTML = `
+                <textarea id="editNotes" rows="3" 
+                    class="w-full p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary resize-none" 
+                    placeholder="รายละเอียดเพิ่มเติม">${notes}</textarea>
+            `;
+
+            // Replace action buttons
+            const actionsDiv = document.getElementById('modalActions');
+            actionsDiv.innerHTML = `
+                <button onclick="cancelEdit()" 
+                    class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    ยกเลิก
+                </button>
+                <button onclick="saveBookingEdit()" 
+                    class="flex-1 px-4 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">save</span>
+                    บันทึก
+                </button>
+            `;
+        }
+
+        function cancelEdit() {
+            if (!currentBooking) return;
+            // Re-render the modal with original data
+            showBookingDetail(currentBooking);
+        }
+
+        async function saveBookingEdit() {
+            if (!currentBooking) return;
+
+            const patientName = document.getElementById('editPatientName')?.value.trim();
+            const startTime = document.getElementById('editStartTime')?.value;
+            const endTime = document.getElementById('editEndTime')?.value;
+            const notes = document.getElementById('editNotes')?.value.trim();
+
+            // Validation
+            if (!patientName || patientName.length < 2) {
+                showNotification('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกชื่อผู้ป่วยอย่างน้อย 2 ตัวอักษร', 'error');
+                return;
+            }
+
+            if (!startTime || !endTime) {
+                showNotification('ข้อมูลไม่ถูกต้อง', 'กรุณาระบุเวลาให้ครบถ้วน', 'error');
+                return;
+            }
+
+            // Validate time range
+            const [startHours, startMinutes] = startTime.split(':').map(Number);
+            const [endHours, endMinutes] = endTime.split(':').map(Number);
+            const startTotalMinutes = startHours * 60 + startMinutes;
+            const endTotalMinutes = endHours * 60 + endMinutes;
+
+            if (endTotalMinutes <= startTotalMinutes) {
+                showNotification('เวลาไม่ถูกต้อง', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+
+                const updateData = {
+                    patient_name: patientName,
+                    start_time: startTime + ':00',
+                    end_time: endTime + ':00',
+                    notes: notes,
+                    date: currentBooking.date.split('T')[0],
+                    status: currentBooking.status
+                };
+
+                const response = await apiCall(`/api/bookings/${currentBooking.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData)
+                });
+
+                console.log('📋 Update response:', response);
+
+                // Update Google Calendar event if exists
+                const googleToken = sessionStorage.getItem('google_calendar_token');
+                const googleEventId = response.google_event_id || currentBooking.google_event_id;
+
+                if (googleToken && googleEventId) {
+                    try {
+                        console.log('📅 Updating Google Calendar event:', googleEventId);
+
+                        // Format datetime for Google Calendar
+                        const dateStr = currentBooking.date.split('T')[0];
+                        const startDateTime = `${dateStr}T${startTime}:00`;
+                        const endDateTime = `${dateStr}T${endTime}:00`;
+
+                        const updateResponse = await fetch(`${API_URL}/api/calendar/events/${googleEventId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${googleToken}`,
+                                'Origin': window.location.origin,
+                            },
+                            body: JSON.stringify({
+                                booking_id: currentBooking.id,
+                                title: `นัดหมาย: ${patientName}`,
+                                patient_name: patientName,
+                                doctor_name: currentBooking.doctors?.name,
+                                treatment: currentBooking.machines?.name,
+                                room_name: currentBooking.rooms?.name,
+                                prep_time: currentBooking.machines?.prep_time_minutes,
+                                cleanup_time: currentBooking.machines?.cleanup_time_minutes,
+                                start_time: startDateTime,
+                                end_time: endDateTime,
+                                notes: notes
+                            })
+                        });
+
+                        if (updateResponse.ok) {
+                            console.log('✅ Updated Google Calendar event successfully');
+                        } else {
+                            const error = await updateResponse.json().catch(() => ({ error: 'Unknown error' }));
+                            console.warn('⚠️ Failed to update Google Calendar event:', error);
+                        }
+                    } catch (calError) {
+                        console.warn('⚠️ Failed to update Google Calendar event:', calError.message);
+                        // Don't throw error, we already updated the booking successfully
+                    }
+                } else {
+                    console.log('ℹ️ Skip Google Calendar update:', {
+                        hasToken: !!googleToken,
+                        hasEventId: !!googleEventId
+                    });
+                }
+
+                hideLoading();
+                showNotification('สำเร็จ', 'แก้ไขการจองเรียบร้อยแล้ว', 'success');
+                closeBookingDetail();
+                // Reset current booking to ensure fresh data on next click
+                currentBooking = null;
+                // Reload bookings with a small delay to ensure modal is fully closed
+                setTimeout(() => {
+                    loadBookingsForDate(selectedDate);
+                }, 300);
+
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                hideLoading();
+                showNotification('เกิดข้อผิดพลาด', 'ไม่สามารถแก้ไขการจองได้: ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================================
+        // UI HELPERS - DIALOGS
+        // ============================================================================
+
+        function showLoading() {
+            const profileMenu = document.getElementById('profileMenu');
+            if (profileMenu) {
+                profileMenu.classList.add('hidden');
+            }
+            document.getElementById('loadingDialog').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingDialog').classList.add('hidden');
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const dialog = document.getElementById('notificationDialog');
+            const icon = document.getElementById('notificationIcon');
+            const iconSpan = icon.querySelector('.material-symbols-outlined');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            const okBtn = document.getElementById('notificationOkBtn');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset classes
+            icon.className = 'flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full';
+            okBtn.className = 'w-full px-4 py-2.5 rounded-xl font-medium hover:opacity-90 transition';
+
+            if (type === 'error') {
+                icon.classList.add('bg-red-100', 'dark:bg-red-900/20');
+                iconSpan.className = 'material-symbols-outlined text-red-600 dark:text-red-400 text-2xl';
+                iconSpan.textContent = 'error';
+                okBtn.classList.add('bg-red-600', 'text-white');
+            } else if (type === 'success') {
+                icon.classList.add('bg-green-100', 'dark:bg-green-900/20');
+                iconSpan.className = 'material-symbols-outlined text-green-600 dark:text-green-400 text-2xl';
+                iconSpan.textContent = 'check_circle';
+                okBtn.classList.add('bg-green-600', 'text-white');
+            } else {
+                icon.classList.add('bg-blue-100', 'dark:bg-blue-900/20');
+                iconSpan.className = 'material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl';
+                iconSpan.textContent = 'info';
+                okBtn.classList.add('bg-primary', 'text-white');
+            }
+
+            dialog.classList.remove('hidden');
+
+            const handleOk = () => {
+                dialog.classList.add('hidden');
+                okBtn.removeEventListener('click', handleOk);
+            };
+
+            okBtn.addEventListener('click', handleOk);
+        }
+
+        function showConfirmDialog(title, message) {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('confirmDialog');
+                const titleEl = document.getElementById('confirmTitle');
+                const messageEl = document.getElementById('confirmMessage');
+                const okBtn = document.getElementById('confirmOkBtn');
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                dialog.classList.remove('hidden');
+
+                const handleOk = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    dialog.classList.add('hidden');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
+            });
+        }
+
+        // Initialize
+        async function init() {
+            checkAuth();
+            await loadUserInfo();
+            renderCalendar();
+            await loadBookingsForDate(selectedDate);
+
+            // Update time indicator every minute
+            // setInterval(updateCurrentTimeIndicator, 60000);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- Loading Dialog -->
+    <div id="loadingDialog" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl p-6 flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">กำลังดำเนินการ...</p>
+        </div>
+    </div>
+
+    <!-- Custom Notification Dialog -->
+    <div id="notificationDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div id="notificationIcon"
+                    class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-2xl">info</span>
+                </div>
+                <h3 id="notificationTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2">
+                </h3>
+                <p id="notificationMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <button id="notificationOkBtn"
+                    class="w-full px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div id="confirmDialog" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-xl max-w-sm w-full transform transition-all">
+            <div class="p-6">
+                <div
+                    class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                    <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-2xl">warning</span>
+                </div>
+                <h3 id="confirmTitle" class="text-lg font-bold text-gray-900 dark:text-white text-center mb-2"></h3>
+                <p id="confirmMessage" class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"></p>
+                <div class="flex gap-3">
+                    <button id="confirmCancelBtn"
+                        class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        ยกเลิก
+                    </button>
+                    <button id="confirmOkBtn"
+                        class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition">
+                        ยืนยัน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year/Month Picker Modal -->
+    <div id="monthPickerModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">เลือกเดือนและปี</h2>
+                    <button onclick="closeMonthPicker()"
+                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+                        <span class="material-symbols-outlined text-gray-500">close</span>
+                    </button>
+                </div>
+
+                <!-- Year Select -->
+                <div class="relative">
+                    <select id="pickerYearSelect" onchange="changePickerYear(this.value)"
+                        class="w-full p-4 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-lg font-bold text-primary focus:ring-2 focus:ring-primary cursor-pointer">
+                        <!-- Years will be populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Months Grid -->
+            <div id="monthsGrid" class="p-6 grid grid-cols-3 gap-3">
+                <!-- Months will be populated by JS -->
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
