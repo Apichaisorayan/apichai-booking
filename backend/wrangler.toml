@@ -11,7 +11,7 @@ database_id = "47a17229-6f10-4703-be97-71b404c7960d"
 
 # Environment Variables
 [vars]
-FRONTEND_URL = "https://beauty-clinic-client.pages.dev,https://deploy.beauty-clinic-app.pages.dev,https://main.beauty-clinic-app.pages.dev,https://9f1c3ab4.beauty-clinic-app.pages.dev,http://localhost:5173,http://192.168.3.151:5173"
+FRONTEND_URL = "https://apichai-booking.pages.dev,https://beauty-clinic-client.pages.dev,https://deploy.beauty-clinic-app.pages.dev,https://main.beauty-clinic-app.pages.dev,https://9f1c3ab4.beauty-clinic-app.pages.dev,http://localhost:5173,http://192.168.3.151:5173"
 
 # Note: Set these secrets via CLI for production:
 # wrangler secret put JWT_SECRET
