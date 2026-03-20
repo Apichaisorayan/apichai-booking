@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "beauty-clinic-db"
-database_id = "47a17229-6f10-4703-be97-71b404c7960d"
+# database_id should be set via environment variable or wrangler CLI
 
 # Environment Variables
 [vars]
