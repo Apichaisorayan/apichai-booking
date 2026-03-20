@@ -319,6 +319,51 @@ machines.put('/:id', async (c) => {
   }
 });
 
+// Bulk link procedures to machine
+machines.post('/:id/procedures/bulk', async (c) => {
+  try {
+    const { id } = c.req.param();
+    const { procedure_ids } = await c.req.json();
+
+    if (!procedure_ids || !Array.isArray(procedure_ids)) {
+      return c.json({ success: false, error: 'procedure_ids array is required' }, 400);
+    }
+
+    // Check if machine exists
+    const machine = await executeOne(c.env.DB, 'SELECT id FROM machines WHERE id = ?', [id]);
+    if (!machine) {
+      return c.json({ success: false, error: 'Machine not found' }, 404);
+    }
+
+    // Delete existing procedure links for this machine
+    await executeRun(c.env.DB, 'DELETE FROM machine_procedures WHERE machine_id = ?', [id]);
+
+    // Insert new procedure links
+    for (const procedureId of procedure_ids) {
+      await executeRun(
+        c.env.DB,
+        'INSERT INTO machine_procedures (id, machine_id, procedure_id) VALUES (?, ?, ?)',
+        [generateId(), id, procedureId]
+      );
+    }
+
+    // Get updated machine with procedures
+    const procedures = await executeQuery(
+      c.env.DB,
+      `SELECT p.*
+       FROM procedures p
+       INNER JOIN machine_procedures mp ON p.id = mp.procedure_id
+       WHERE mp.machine_id = ? AND p.is_active = 1
+       ORDER BY p.name`,
+      [id]
+    );
+
+    return c.json({ success: true, procedures });
+  } catch (error) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // Delete machine
 machines.delete('/:id', async (c) => {
   try {

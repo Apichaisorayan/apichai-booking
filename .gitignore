@@ -45,6 +45,18 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment production
+.env.production
+client/.env.production
+
+# Wrangler state
+.wrangler/
+
 # Temporary folders
 tmp/
 temp/

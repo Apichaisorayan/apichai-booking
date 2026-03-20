@@ -2,7 +2,7 @@ name = "beauty-clinic-api-qa"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-account_id = "aa290d0b09354dfc27f2784c873c6f68"
+# account_id should be set via CLOUDFLARE_ACCOUNT_ID env variable or wrangler login
 
 # D1 Database (QA)
 [[d1_databases]]

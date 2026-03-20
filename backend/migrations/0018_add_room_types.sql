@@ -13,8 +13,9 @@ CREATE TABLE rooms_new (
   cleanup_time_minutes INTEGER DEFAULT 15
 );
 
--- Step 2: Copy data from old table
-INSERT INTO rooms_new SELECT * FROM rooms;
+-- Step 2: Copy data from old table (only existing columns)
+INSERT INTO rooms_new (id, name, is_available, created_at, updated_at, room_type) 
+SELECT id, name, is_available, created_at, updated_at, room_type FROM rooms;
 
 -- Step 3: Drop old table
 DROP TABLE rooms;
